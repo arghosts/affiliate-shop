@@ -13,8 +13,10 @@ export default async function ProductDetail({
 
   const product = await prisma.product.findUnique({
     where: { slug: resolvedParams.slug },
-    include: { images: true },
-  });
+    include: {  images: true,
+                category: true 
+              },
+            });
 
   if (!product) notFound();
 
@@ -60,7 +62,7 @@ export default async function ProductDetail({
           <div className="flex flex-col pt-4">
             {/* Tag Kategori: Surface BG + Coffee Text */}
             <span className="text-coffee font-black text-[10px] tracking-[0.2em] uppercase mb-4 px-3 py-1 bg-surface w-fit rounded-sm">
-              {product.category || "GADGET REVIEW"}
+              {product.category?.name || "GADGET REVIEW"}
             </span>
 
             {/* Judul: Coffee (Espresso) */}
