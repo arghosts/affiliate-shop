@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Calendar, ChevronRight, FileText } from "lucide-react";
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Blog & Artikel - Review Gadget Terbaru",
   description: "Tips, trik, dan review mendalam seputar teknologi terkini.",
