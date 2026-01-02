@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: commonsys_db_container
+    restart: always
+    environment:
+      POSTGRES_USER: arga
+      POSTGRES_PASSWORD: argapassword
+      POSTGRES_DB: commonsys_shop
+    ports:
+      - "5432:5432" # Port 5432 di Linux diteruskan ke Windows
+    volumes:
+      - commonsys_pg_data:/var/lib/postgresql/data
+
+volumes:
+  commonsys_pg_data:

@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@theme {
+  /* Background: Putih bersih dengan sedikit sentuhan abu agar tidak silau */
+  --color-warm-bg: #fcfcfc;      
+  
+  /* Coffee: Diganti ke Deep Espresso (Merah-Cokelat sangat gelap, sangat premium) */
+  --color-coffee: #2D1B1B;       
+  
+  /* Muted Brown: Untuk teks artikel agar tidak sehitam pekat tadi */
+  --color-muted-brown: #4A4A4A;  
+  
+  /* Accent: Muted Teal (Lebih adem tapi tetap kontras dengan merah-cokelat) */
+  --color-gold-accent: #088395;  
+  
+  /* Surface: Krem lembut untuk membedakan area kartu */
+  --color-surface: #F2EADA;      
+}
+
+@layer base {
+  body {
+    background-color: var(--color-warm-bg);
+    color: var(--color-coffee);
+    /* Smooth scrolling untuk kenyamanan pembaca */
+    scroll-behavior: smooth;
+  }
+}
+@layer components {
+  .label-admin {
+    @apply block text-xs font-black uppercase tracking-wider text-muted-brown mb-2;
+  }
+  
+  .input-admin {
+    @apply w-full bg-white px-4 py-3 rounded-xl border border-transparent focus:border-gold-accent focus:ring-2 focus:ring-gold-accent/20 outline-none transition-all text-sm font-bold text-coffee placeholder:text-gray-300 shadow-sm;
+  }
+}
