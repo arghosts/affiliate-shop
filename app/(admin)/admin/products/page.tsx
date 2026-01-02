@@ -13,6 +13,8 @@ const formatRupiah = (num: number) => {
   }).format(num);
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ProductListPage() {
   // Fetch Products dengan Relasi
   const products = await prisma.product.findMany({

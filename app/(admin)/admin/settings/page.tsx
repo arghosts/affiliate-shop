@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import SettingsForm from "./settings-form"; // Import Client Component tadi
 
+export const dynamic = "force-dynamic";
+
 export default async function SettingsPage() {
   // 1. Fetch Data di Server
   const settings = await prisma.siteSetting.findFirst();
