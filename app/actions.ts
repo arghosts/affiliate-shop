@@ -39,7 +39,7 @@ export async function createProduct(prevState: any, formData: FormData) {
       data: {
         name,
         slug,
-        category,
+        categoryId: category,
         description,
         price: Number(price),
         shopeeLink,
