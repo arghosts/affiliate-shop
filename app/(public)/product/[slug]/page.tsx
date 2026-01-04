@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import ImageCarousel from "@/components/ImageCarousel"; 
+import ImageCarousel from "@/components/ImageCarousel";
+import FloatingCTA from "@/components/FloatingCTA"; 
 import { ShoppingBag, CheckCircle2, AlertCircle, Youtube, ChevronLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -59,7 +60,7 @@ export default async function ProductDetail({
 
   return (
     // Background Warm White sesuai Global CSS
-    <div className="min-h-screen bg-warm-bg pb-20">
+    <div className="min-h-screen bg-warm-bg pb-24">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -174,6 +175,11 @@ export default async function ProductDetail({
           </div>
         </div>
       </div>
+      <FloatingCTA 
+        price={Number(product.price)} 
+        shopeeLink={product.shopeeLink} 
+        tokpedLink={product.tokpedLink} 
+      />
     </div>
   );
 }
