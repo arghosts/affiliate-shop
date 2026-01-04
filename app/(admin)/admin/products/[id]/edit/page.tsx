@@ -3,6 +3,8 @@ import ProductFormShared from "../../product-form-shared"; // Import Shared Form
 import { updateProductAction } from "./actions"; // Import Action Edit
 import { notFound } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 

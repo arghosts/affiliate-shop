@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import ProductFormShared from "../product-form-shared"; // Pakai Shared Form
 import { createProductAction } from "./actions";       // Pakai Action Create lama
 
+export const dynamic = "force-dynamic";
+
 export default async function NewProductPage() {
   const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
   const tags = await prisma.tag.findMany({ orderBy: { name: 'asc' } });
