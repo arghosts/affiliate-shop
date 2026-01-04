@@ -3,64 +3,96 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-// Helper simpel untuk bikin slug kategori jika kategori baru dibuat otomatis
 function slugify(text: string) {
+  if (!text) return "";
   return text.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
 }
 
-export async function importProducts(rows: any[]) {
+export async function importProducts(rawRows: any[]) {
   try {
     let successCount = 0;
     let errorCount = 0;
 
-    for (const row of rows) {
-      // 1. Validasi minimal
+    // Cek di terminal Vercel/VS Code untuk melihat data yang masuk
+    console.log("🔍 Data baris pertama yang diterima:", rawRows[0]);
+
+    for (const rawRow of rawRows) {
+      // 1. NORMALISASI KEYS (Bikin kode pintar baca Name/name/NAME)
+      const row: any = {};
+      Object.keys(rawRow).forEach((key) => {
+        // Ubah semua header jadi huruf kecil & hapus spasi
+        row[key.toLowerCase().trim()] = rawRow[key];
+      });
+
+      // 2. Validasi (Sekarang lebih aman karena keys sudah dinormalisasi)
       if (!row.name || !row.price) {
+        // Skip baris kosong tapi jangan hitung error jika memang baris total kosong
+        console.log("⚠️ Skip baris karena name/price kosong:", row);
         errorCount++;
-        continue; // Skip baris kosong/rusak
+        continue;
       }
 
-      // 2. LOGIKA PENTING: Handle Kategori
-      // Di Excel isinya "Camera" (Nama), tapi DB butuh ID.
+      // 3. Handle Kategori
       let categoryId = null;
-
-      if (row.categoryId) {
-        // Cari dulu apakah kategori "Camera" sudah ada?
+      if (row.categoryid || row.category) { // Bisa baca 'categoryId' atau 'Category'
+        const catName = row.categoryid || row.category;
+        
         const existingCat = await prisma.category.findFirst({
-          where: { name: { equals: row.categoryId, mode: "insensitive" } },
+          where: { name: { equals: catName, mode: "insensitive" } },
         });
 
         if (existingCat) {
           categoryId = existingCat.id;
         } else {
-          // Jika belum ada, BUAT BARU otomatis!
           const newCat = await prisma.category.create({
             data: {
-              name: row.categoryId,
-              slug: slugify(row.categoryId),
+              name: catName,
+              slug: slugify(catName),
             },
           });
           categoryId = newCat.id;
         }
       }
 
-      // 3. Simpan Produk
+      // 4. LOGIC BARU: Kumpulkan Gambar (Multi-Image Support)
+      const imagesToCreate = [];
+
+      // Cek kolom image1 s/d image6 di Excel
+      const potentialImages = [
+        row.image1, row.image2, row.image3, 
+        row.image4, row.image5, row.image6
+      ];
+
+      potentialImages.forEach((imgUrl) => {
+        if (imgUrl && typeof imgUrl === 'string' && imgUrl.trim().length > 0) {
+          imagesToCreate.push({ url: imgUrl.trim() });
+        }
+      });
+
+      // Jika di Excel KOSONG SEMUA, baru pakai Placeholder
+      if (imagesToCreate.length === 0) {
+        imagesToCreate.push({ 
+          url: "https://placehold.co/600x400?text=" + encodeURIComponent(row.name) 
+        });
+      }
+
+      // 5. Simpan Produk dengan Array Gambar
       await prisma.product.create({
         data: {
           name: row.name,
-          slug: row.slug || slugify(row.name), // Pakai slug excel atau generate
-          description: row.description || "",
-          price: Number(row.price), // Pastikan jadi angka
-          shopeeLink: row.shopeeLink || null,
-          tokpedLink: row.tokpedLink || null, // Sesuai nama kolom di Excel Anda
+          slug: row.slug ? slugify(String(row.slug)) : slugify(row.name),
+          description: row.description ? String(row.description) : "",
+          price: Number(row.price),
+          shopeeLink: row.shopeelink || null,
+          tokpedLink: row.tokpedlink || null,
           pros: row.pros || null,
           cons: row.cons || null,
-          // Convert string "True"/"False" excel jadi boolean
-          isFeatured: String(row.isFeatured).toLowerCase() === "true",
+          isFeatured: String(row.isfeatured).toLowerCase() === "true",
           categoryId: categoryId,
-          // Default image placeholder jika excel tidak punya kolom gambar
+          
+          // 👇 BAGIAN AJAIBNYA DISINI
           images: {
-             create: { url: "https://placehold.co/600x400?text=No+Image" } 
+             create: imagesToCreate // Masukkan array gambar (bisa 1, bisa 6)
           }
         },
       });
@@ -69,10 +101,16 @@ export async function importProducts(rows: any[]) {
     }
 
     revalidatePath("/admin/products");
-    return { success: true, message: `Berhasil import ${successCount} produk!` };
+    
+    // Beri laporan detail
+    if (successCount === 0) {
+      return { success: false, message: `Gagal! 0 data masuk. Cek Terminal VSCode untuk detail error.` };
+    }
+    
+    return { success: true, message: `Sukses! ${successCount} produk masuk. (${errorCount} di-skip)` };
   
   } catch (error) {
-    console.error("Import Error:", error);
-    return { success: false, message: "Gagal import data. Cek console server." };
+    console.error("Import Critical Error:", error);
+    return { success: false, message: "Server Error. Cek Terminal." };
   }
 }
