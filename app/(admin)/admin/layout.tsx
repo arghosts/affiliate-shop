@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, Package, Settings, LogOut, ExternalLink, Tag, LayoutList } from "lucide-react";
+import { LayoutDashboard, Package, Settings, LogOut, ExternalLink, Tag, LayoutList, FileSpreadsheet } from "lucide-react";
 import { deleteSession } from "@/lib/session"; // Import utility logic
 import { Toaster } from "react-hot-toast";
 
@@ -41,7 +41,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Package className="w-5 h-5" />
             Produk
           </Link>
-
+          <Link 
+            href="/admin/import" 
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-white/80 hover:bg-white/10 hover:text-white hover:translate-x-1 transition-all"
+          >
+            <FileSpreadsheet className="w-5 h-5" />
+            Import Spreadsheet
+          </Link>
+          
           <Link 
             href="/admin/tags" 
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-white/80 hover:bg-white/10 hover:text-white hover:translate-x-1 transition-all"
