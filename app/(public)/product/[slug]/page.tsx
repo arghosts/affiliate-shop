@@ -35,11 +35,35 @@ export default async function ProductDetail({
 
   const prosList = getList(product.pros);
   const consList = getList(product.cons);
+  // JSON-LD untuk Google (Product Schema)
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    image: product.images[0]?.url,
+    description: product.description,
+    brand: {
+      "@type": "Brand",
+      name: product.category?.name || "Gadget", 
+    },
+    offers: {
+      "@type": "Offer",
+      // 👇 PERBAIKAN DI SINI: Ganti 'tokopediaLink' jadi 'tokpedLink'
+      url: product.shopeeLink || product.tokpedLink || "https://jagopilih.vercel.app",
+      priceCurrency: "IDR",
+      // Tips: Konversi Decimal ke Number/String agar JSON tidak error
+      price: Number(product.price), 
+      availability: "https://schema.org/InStock",
+    },
+  };
 
   return (
     // Background Warm White sesuai Global CSS
     <div className="min-h-screen bg-warm-bg pb-20">
-      
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Breadcrumb */}
       <div className="container mx-auto px-4 py-8">
         <Link 
