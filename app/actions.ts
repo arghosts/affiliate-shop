@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { imagekit } from "@/lib/imagekit";
 
 // Fungsi bantu untuk membuat slug dari nama produk
 
@@ -98,4 +99,31 @@ export async function login(prevState: any, formData: FormData) {
 export async function logout() {
   (await cookies()).delete('admin_session');
   redirect('/login');
+}
+
+export async function uploadImage(formData: FormData) {
+  const file = formData.get("file") as File;
+  
+  if (!file) {
+    throw new Error("No file found");
+  }
+
+  // Convert file to Buffer (ImageKit needs this)
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  try {
+    const response = await imagekit.upload({
+      file: buffer,
+      fileName: file.name,
+      folder: "/jagopilih/products", // Keep it organized
+    });
+
+    // Return the URL so you can save it to your Database later
+    return { success: true, url: response.url };
+    
+  } catch (error) {
+    console.error("Upload failed:", error);
+    return { success: false, error: "Upload failed" };
+  }
 }

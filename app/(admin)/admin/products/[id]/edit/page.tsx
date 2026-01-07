@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import ProductFormShared from "../../product-form-shared"; // Import Shared Form
-import { updateProductAction } from "./actions"; // Import Action Edit
+import { updateProduct } from "./actions"; // Import Action Edit
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,6 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const product = await prisma.product.findUnique({
     where: { id },
     include: {
-      images: true,
       tags: true, // Tags perlu diambil untuk pre-checked checkbox
     }
   });
@@ -40,7 +39,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
       <ProductFormShared 
         categories={categories} 
         tags={tags} 
-        action={updateProductAction} // Pakai action Edit
+        action={updateProduct} // Pakai action Edit
         initialData={initialData}    // Masukkan data lama
       />
     </div>

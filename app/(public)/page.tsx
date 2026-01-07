@@ -44,7 +44,6 @@ export default async function HomePage({
     take: 12, // Tampilkan lebih banyak biar enak dilihat
     orderBy: { createdAt: "desc" },
     include: {
-      images: true,
       category: true, 
       tags: true
     },
@@ -172,7 +171,7 @@ export default async function HomePage({
                       slug: product.slug,
                       price: Number(product.price),
                       category: product.category?.name || "Uncategorized", 
-                      image: product.images[0]?.url || "/file.svg", 
+                      image: product.images[0] || "/file.svg", 
                       shopeeLink: product.shopeeLink,
                       tokpedLink: product.tokpedLink
                     }}

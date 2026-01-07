@@ -3,9 +3,16 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+// Helper Slugify
 function slugify(text: string) {
   if (!text) return "";
-  return text.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, "");
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")     
+    .replace(/[^\w-]+/g, "")  
+    .replace(/--+/g, "-");    
 }
 
 export async function importProducts(rawRows: any[]) {
@@ -13,32 +20,31 @@ export async function importProducts(rawRows: any[]) {
     let successCount = 0;
     let errorCount = 0;
 
-    // Cek di terminal Vercel/VS Code untuk melihat data yang masuk
-    console.log("🔍 Data baris pertama yang diterima:", rawRows[0]);
+    // Debugging
+    if (rawRows.length > 0) {
+      console.log("🔍 Sample Row Data:", rawRows[0]);
+    }
 
     for (const rawRow of rawRows) {
-      // 1. NORMALISASI KEYS (Bikin kode pintar baca Name/name/NAME)
+      // 1. NORMALISASI KEYS (Lowercase & Trim)
       const row: any = {};
       Object.keys(rawRow).forEach((key) => {
-        // Ubah semua header jadi huruf kecil & hapus spasi
         row[key.toLowerCase().trim()] = rawRow[key];
       });
 
-      // 2. Validasi (Sekarang lebih aman karena keys sudah dinormalisasi)
+      // 2. VALIDASI DASAR
       if (!row.name || !row.price) {
-        // Skip baris kosong tapi jangan hitung error jika memang baris total kosong
         console.log("⚠️ Skip baris karena name/price kosong:", row);
         errorCount++;
         continue;
       }
 
-      // 3. Handle Kategori
+      // 3. HANDLE KATEGORI
       let categoryId = null;
-      if (row.categoryid || row.category) { // Bisa baca 'categoryId' atau 'Category'
-        const catName = row.categoryid || row.category;
-        
-        const existingCat = await prisma.category.findFirst({
-          where: { name: { equals: catName, mode: "insensitive" } },
+      if (row.category) {
+        const catSlug = slugify(String(row.category));
+        const existingCat = await prisma.category.findUnique({
+          where: { slug: catSlug },
         });
 
         if (existingCat) {
@@ -46,71 +52,80 @@ export async function importProducts(rawRows: any[]) {
         } else {
           const newCat = await prisma.category.create({
             data: {
-              name: catName,
-              slug: slugify(catName),
+              name: String(row.category),
+              slug: catSlug,
             },
           });
           categoryId = newCat.id;
         }
       }
 
-      // 4. LOGIC BARU: Kumpulkan Gambar (Multi-Image Support)
-      const imagesToCreate = [];
+      // 4. HANDLE GAMBAR (Versi Array String [])
+      // Kita cari kolom image1, image2, dst di Excel
+      const imagesList: string[] = [];
 
-      // Cek kolom image1 s/d image6 di Excel
-      const potentialImages = [
-        row.image1, row.image2, row.image3, 
-        row.image4, row.image5, row.image6
-      ];
-
-      potentialImages.forEach((imgUrl) => {
-        if (imgUrl && typeof imgUrl === 'string' && imgUrl.trim().length > 0) {
-          imagesToCreate.push({ url: imgUrl.trim() });
+      for (let i = 1; i <= 6; i++) {
+        const imgKey = `image${i}`; // image1, image2...
+        if (row[imgKey]) {
+          imagesList.push(String(row[imgKey]).trim());
         }
-      });
-
-      // Jika di Excel KOSONG SEMUA, baru pakai Placeholder
-      if (imagesToCreate.length === 0) {
-        imagesToCreate.push({ 
-          url: "https://placehold.co/600x400?text=" + encodeURIComponent(row.name) 
-        });
       }
 
-      // 5. Simpan Produk dengan Array Gambar
-      await prisma.product.create({
-        data: {
-          name: row.name,
-          slug: row.slug ? slugify(String(row.slug)) : slugify(row.name),
-          description: row.description ? String(row.description) : "",
-          price: Number(row.price),
-          shopeeLink: row.shopeelink || null,
-          tokpedLink: row.tokpedlink || null,
-          pros: row.pros || null,
-          cons: row.cons || null,
-          isFeatured: String(row.isfeatured).toLowerCase() === "true",
-          categoryId: categoryId,
-          
-          // 👇 BAGIAN AJAIBNYA DISINI
-          images: {
-             create: imagesToCreate // Masukkan array gambar (bisa 1, bisa 6)
-          }
-        },
-      });
+      // Jika kosong, kasih placeholder
+      if (imagesList.length === 0) {
+        imagesList.push(
+          "https://placehold.co/600x400?text=" + encodeURIComponent(row.name)
+        );
+      }
 
-      successCount++;
+      // 5. BERSIHKAN HARGA
+      const cleanPrice = String(row.price).replace(/[^0-9.]/g, "");
+
+      // 6. SIMPAN PRODUK
+      try {
+        await prisma.product.create({
+          data: {
+            name: row.name,
+            // Fallback slug biar unik pakai timestamp
+            slug: row.slug ? slugify(String(row.slug)) : slugify(row.name + "-" + Date.now()), 
+            description: row.description ? String(row.description) : "",
+            price: Number(cleanPrice),
+            
+            shopeeLink: row.shopeelink || null,
+            tokpedLink: row.tokpedlink || null,
+            
+            pros: row.pros || null,
+            cons: row.cons || null,
+            
+            // Boolean check
+            isFeatured: String(row.isfeatured).toLowerCase() === "true",
+            
+            categoryId: categoryId,
+
+            // 👇 PERBAIKAN UTAMA: Langsung Array String
+            images: imagesList, 
+          },
+        });
+        successCount++;
+      } catch (err: any) {
+        console.error("❌ Gagal simpan produk:", row.name, err.message);
+        errorCount++;
+      }
     }
 
     revalidatePath("/admin/products");
     
-    // Beri laporan detail
     if (successCount === 0) {
-      return { success: false, message: `Gagal! 0 data masuk. Cek Terminal VSCode untuk detail error.` };
+      return { success: false, message: `Gagal! 0 data masuk. Cek terminal.` };
     }
-    
-    return { success: true, message: `Sukses! ${successCount} produk masuk. (${errorCount} di-skip)` };
-  
+
+    return { 
+      success: true, 
+      message: `Sukses import ${successCount} produk. Gagal: ${errorCount}` 
+    };
+
   } catch (error) {
     console.error("Import Critical Error:", error);
-    return { success: false, message: "Server Error. Cek Terminal." };
+    return { success: false, message: "Terjadi kesalahan sistem saat import." };
   }
 }

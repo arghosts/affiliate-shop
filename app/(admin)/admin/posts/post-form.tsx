@@ -1,137 +1,163 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { Loader2, Save, Image as ImageIcon, ArrowLeft } from "lucide-react";
-import Link from "next/link";
-import toast from "react-hot-toast";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+import FormImageUpload from "@/components/FormImageUpload";
 
-interface PostData {
-  id?: string;
-  title: string;
-  slug: string;
-  content: string;
-  thumbnail?: string | null;
-}
+// Import Editor Lazy Load
+const Editor = dynamic(() => import("@/components/Editor"), { ssr: false });
 
 interface PostFormProps {
-  action: any;
-  initialData?: PostData | null; // Null = Create Mode
+  initialData?: any; 
+  // Action signature yang kita harapkan
+  action: (id: string | null, prevState: any, formData: FormData) => Promise<any>; 
 }
 
-const initialState = { status: "", message: "" };
+export default function PostForm({ initialData, action }: PostFormProps) {
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  
+  // State Content
+  const [contentJson, setContentJson] = useState<any>(
+    initialData?.content ? (typeof initialData.content === 'string' ? JSON.parse(initialData.content) : initialData.content) : null
+  );
 
-export default function PostForm({ action, initialData }: PostFormProps) {
-  const actionWithId = initialData?.id ? action.bind(null, initialData.id) : action;
-  const [state, formAction, isPending] = useActionState(actionWithId, initialState);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
 
-  const [title, setTitle] = useState(initialData?.title || "");
-  const [slug, setSlug] = useState(initialData?.slug || "");
-  const [thumbnail, setThumbnail] = useState(initialData?.thumbnail || "");
+    const formData = new FormData(e.currentTarget);
 
-  // Auto-Slug generator
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setTitle(val);
-    if (!initialData) { // Hanya auto-slug saat create baru
-      setSlug(val.toLowerCase().replace(/ /g, "-").replace(/[^\w-]+/g, ""));
+    // Validasi Editor
+    if (!contentJson || (contentJson.blocks && contentJson.blocks.length === 0)) {
+      alert("Konten tidak boleh kosong!");
+      setLoading(false);
+      return;
     }
+
+    // Masukkan JSON ke FormData
+    formData.set("content", JSON.stringify(contentJson));
+
+    // PANGGIL ACTION DENGAN URUTAN YANG BENAR:
+    // Arg 1: ID (jika edit) atau null (jika create)
+    // Arg 2: null (sebagai dummy prevState)
+    // Arg 3: formData (isi form)
+    
+    try {
+        const result = await action(initialData?.id || null, null, formData);
+
+        if (result?.status === "success") {
+          // Redirect biasanya sudah dihandle server, tapi kalau client component kadang butuh refresh
+          // router.push("/admin/posts"); // Opsional, tergantung action redirect
+          router.push("/admin/posts");
+          router.refresh();
+        } else {
+           // Jika ada error message dari server
+           alert(result?.message || "Gagal menyimpan.");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan sistem.");
+    }
+    
+    setLoading(false);
   };
 
-  if (state.status === "error") {
-    toast.error(state.message, { id: "error-toast" });
-  }
-
   return (
-    <form action={formAction} className="max-w-4xl mx-auto space-y-8">
-      
-      {/* Header & Back Button */}
-      <div className="flex items-center justify-between">
-        <Link href="/admin/posts" className="text-sm font-bold text-gray-400 hover:text-coffee flex items-center gap-2">
-          <ArrowLeft className="w-4 h-4" /> Kembali ke List
-        </Link>
-        <h1 className="text-2xl font-black text-coffee">{initialData ? "Edit Artikel" : "Tulis Artikel Baru"}</h1>
-      </div>
+    <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+      <h1 className="text-2xl font-bold mb-6 text-gray-800">
+        {initialData ? "Edit Artikel" : "Tulis Artikel Baru"}
+      </h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <form onSubmit={handleSubmit} className="space-y-6">
         
-        {/* KOLOM KIRI: EDITOR UTAMA */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-             <div className="space-y-4">
-               <div>
-                 <label className="label-admin">Judul Artikel</label>
-                 <input 
-                    name="title" 
-                    value={title} 
-                    onChange={handleTitleChange} 
-                    className="input-admin text-lg font-bold" 
-                    placeholder="Contoh: 5 Drone Terbaik 2024"
-                    required 
-                 />
-               </div>
-               <div>
-                 <label className="label-admin">Slug (URL)</label>
-                 <input 
-                    name="slug" 
-                    value={slug} 
-                    onChange={(e) => setSlug(e.target.value)} 
-                    className="input-admin bg-gray-50 text-sm font-mono text-gray-500"
-                    required 
-                 />
-               </div>
-               <div>
-                 <label className="label-admin">Isi Konten</label>
-                 {/* Tips: Nanti bisa diganti Rich Text Editor, sekarang Textarea dulu */}
-                 <textarea 
-                    name="content" 
-                    defaultValue={initialData?.content || ""}
-                    className="input-admin min-h-[400px] leading-relaxed" 
-                    placeholder="Tulis review lengkap di sini..."
-                    required
-                 />
-                 <p className="text-xs text-gray-400 mt-2 text-right">Bisa menggunakan HTML sederhana.</p>
-               </div>
-             </div>
+        {/* Input Judul */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Judul Artikel</label>
+          <input
+            name="title"
+            type="text"
+            defaultValue={initialData?.title}
+            required
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+            placeholder="Contoh: Review Jujur iPhone 15"
+          />
+        </div>
+
+        {/* Input Slug */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Slug (Opsional)</label>
+          <input
+            name="slug"
+            type="text"
+            defaultValue={initialData?.slug}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-gray-600 text-sm"
+            placeholder="biarkan-kosong-auto-generate"
+          />
+        </div>
+
+        {/* IMAGE UPLOAD COMPONENT (Pengganti Input URL) */}
+        <FormImageUpload 
+          name="thumbnail" 
+          label="Thumbnail Artikel" 
+          defaultValue={initialData?.thumbnail} 
+        />
+
+        {/* SECTION LINK AFFILIATE */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Link Shopee (Opsional)</label>
+            <input
+              name="shopeeLink"
+              type="url"
+              defaultValue={initialData?.shopeeLink || ""}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-sm"
+              placeholder="https://shope.ee/..."
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Link Tokopedia (Opsional)</label>
+            <input
+              name="tokpedLink"
+              type="url"
+              defaultValue={initialData?.tokpedLink || ""}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-sm"
+              placeholder="https://tokopedia.link/..."
+            />
           </div>
         </div>
 
-        {/* KOLOM KANAN: META & GAMBAR */}
-        <div className="space-y-6">
-           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 sticky top-8">
-              <h3 className="font-bold text-coffee mb-4 border-b pb-2">Thumbnail</h3>
-              
-              <div className="aspect-video w-full bg-gray-100 rounded-lg border border-gray-200 mb-4 overflow-hidden relative flex items-center justify-center">
-                 {thumbnail ? (
-                    <img src={thumbnail} alt="Preview" className="w-full h-full object-cover" />
-                 ) : (
-                    <ImageIcon className="w-8 h-8 text-gray-300" />
-                 )}
-              </div>
-
-              <div className="space-y-2">
-                <label className="label-admin">URL Gambar</label>
-                <input 
-                  name="thumbnail" 
-                  value={thumbnail}
-                  onChange={(e) => setThumbnail(e.target.value)}
-                  placeholder="https://..." 
-                  className="input-admin" 
-                />
-              </div>
-
-              <div className="mt-8 pt-4 border-t border-gray-100">
-                <button 
-                  type="submit" 
-                  disabled={isPending}
-                  className="w-full bg-gold-accent text-white py-3 rounded-xl font-bold uppercase tracking-wider hover:bg-opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
-                >
-                  {isPending ? <Loader2 className="animate-spin w-4 h-4" /> : <><Save className="w-4 h-4" /> Simpan Artikel</>}
-                </button>
-              </div>
-           </div>
+        {/* EDITOR */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Konten</label>
+          <div className="bg-gray-50 p-1 rounded-xl border border-gray-200 focus-within:ring-2 focus-within:ring-orange-500 focus-within:border-transparent transition-all min-h-[400px]">
+            <Editor 
+              holder="editorjs-edit-container" 
+              data={contentJson} 
+              onChange={(data) => setContentJson(data)} 
+            />
+          </div>
         </div>
 
-      </div>
-    </form>
+        {/* Tombol Action */}
+        <div className="flex justify-end pt-6 border-t border-gray-100 gap-4">
+           <button
+            type="button"
+            onClick={() => router.back()}
+            className="px-6 py-2 rounded-lg text-gray-600 hover:bg-gray-100 font-medium transition-colors"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-orange-600 text-white px-8 py-2 rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 font-bold shadow-lg shadow-orange-200"
+          >
+            {loading ? "Menyimpan..." : (initialData ? "Update Artikel" : "Publish Artikel")}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }

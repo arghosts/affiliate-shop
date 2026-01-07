@@ -1,78 +1,62 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-
-// Definisi tipe data yang diterima komponen
-interface ImageType {
-  id: string;
-  url: string;
-  // Kita biarkan productId opsional atau tidak ditulis karena tidak dipakai di UI ini
-}
+import { useState, useEffect } from "react";
+import Image from "next/image"; // Opsional: Bisa pakai <img> biasa jika mau simple
 
 interface ImageCarouselProps {
-  images: ImageType[];
-  productName: string; // ✅ MENAMBAHKAN INI UNTUK FIX ERROR
+  // 👇 UPDATE: Sekarang menerima array string, bukan object
+  images: string[]; 
+  productName: string;
 }
 
-export default function ImageCarousel({ 
-  images, 
-  productName 
-}: ImageCarouselProps) {
-  
-  // Fallback jika gambar kosong
-  const safeImages = images.length > 0 ? images : [{ id: "default", url: "/file.svg" }];
-  const [activeIndex, setActiveIndex] = useState(0);
+export default function ImageCarousel({ images, productName }: ImageCarouselProps) {
+  // State untuk gambar yang sedang aktif (ditampilkan besar)
+  const [activeImage, setActiveImage] = useState<string>(images[0] || "/placeholder.jpg");
+
+  // Reset active image jika props images berubah
+  useEffect(() => {
+    if (images.length > 0) {
+      setActiveImage(images[0]);
+    }
+  }, [images]);
+
+  if (!images || images.length === 0) {
+    return (
+      <div className="aspect-square bg-gray-100 rounded-xl flex items-center justify-center text-gray-400">
+        No Image Available
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* --- Main Image Viewport --- */}
-      {/* Menggunakan bg-surface sesuai tema */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-surface border border-surface shadow-inner">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeIndex}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="absolute inset-0 p-8" // Padding agar gambar tidak mentok pinggir
-          >
-            <Image
-              src={safeImages[activeIndex].url}
-              alt={`${productName} - View ${activeIndex + 1}`}
-              fill
-              className="object-contain"
-              priority
-            />
-          </motion.div>
-        </AnimatePresence>
-        
-        {/* Badge jumlah gambar */}
-        <div className="absolute bottom-4 right-4 bg-coffee text-warm-bg text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest opacity-80">
-          {activeIndex + 1} / {safeImages.length}
-        </div>
+    <div className="flex flex-col gap-4">
+      {/* 1. Main Image (Besar) */}
+      <div className="relative aspect-square w-full bg-white rounded-2xl overflow-hidden border border-gray-100 p-4 flex items-center justify-center">
+        {/* Menggunakan <img> biasa agar aman dari masalah config domain Next.js sementara ini */}
+        <img 
+          src={activeImage}
+          alt={productName}
+          className="object-contain w-full h-full hover:scale-105 transition-transform duration-500"
+        />
       </div>
 
-      {/* --- Thumbnails --- */}
-      {safeImages.length > 1 && (
+      {/* 2. Thumbnails (Kecil) */}
+      {images.length > 1 && (
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {safeImages.map((img, idx) => (
+          {images.map((url, index) => (
             <button
-              key={img.id}
-              onClick={() => setActiveIndex(idx)}
-              className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-300 ${
-                idx === activeIndex
-                  ? "border-gold-accent ring-2 ring-gold-accent/20 grayscale-0" // Active: Teal Border
-                  : "border-transparent opacity-60 hover:opacity-100 grayscale" // Inactive: Grayscale biar fokus ke main image
+              key={index} // Gunakan index sebagai key karena URL string unik
+              onClick={() => setActiveImage(url)}
+              className={`relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
+                activeImage === url
+                  ? "border-gold-accent opacity-100 ring-2 ring-gold-accent/20"
+                  : "border-transparent opacity-60 hover:opacity-100"
               }`}
             >
-              <Image
-                src={img.url}
-                alt="Thumbnail"
-                fill
-                className="object-cover"
+              <img 
+                src={url}
+                alt={`${productName} view ${index + 1}`}
+                className="object-cover w-full h-full bg-white"
               />
             </button>
           ))}

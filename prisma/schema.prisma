@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,80 +7,85 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// --- PRODUCT SECTION ---
+
 model Product {
   id          String   @id @default(uuid())
   name        String
   slug        String   @unique
   description String?  @db.Text
   price       Decimal  @db.Decimal(12, 2)
-  
+   
   // External Links
   shopeeLink  String?
   tokpedLink  String?
-  
-  // Pros & Cons (Disimpan sebagai String separated by comma, ex: "Bagus,Murah,Cepat")
+   
+  // Pros & Cons (Tetap String dulu, nanti diparsing di frontend)
   pros        String?  @db.Text
   cons        String?  @db.Text
-  
-  images      ProductImage[]
+   
+  images      String[] @default([])
   isFeatured  Boolean  @default(false)
-  
+   
   // RELATIONS
-  // 1. Category (One-to-Many): Satu produk punya satu kategori utama
   categoryId  String?
   category    Category? @relation(fields: [categoryId], references: [id])
 
-  // 2. Tags (Many-to-Many): Produk bisa punya banyak tag (Smart Home, Gaming, Cheap)
   tags        Tag[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-model ProductImage {
-  id        String  @id @default(uuid())
-  url       String  // Simpan link gambar eksternal di sini
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  productId String
-}
 model Category {
   id        String    @id @default(uuid())
-  name      String    @unique // Misal: "Field Gear"
-  slug      String    @unique // Misal: "field-gear"
+  name      String    @unique
+  slug      String    @unique
   products  Product[]
   createdAt DateTime  @default(now())
 }
 
 model Tag {
   id        String    @id @default(uuid())
-  name      String    @unique // Misal: "Best Value"
-  slug      String    @unique // Misal: "best-value"
+  name      String    @unique
+  slug      String    @unique
   products  Product[] 
-  // Nanti di masa depan tinggal tambah: posts Post[]
 }
+
+// --- BLOG SECTION (YANG BERUBAH) ---
 
 model Post {
   id        String   @id @default(uuid())
   title     String
   slug      String   @unique
-  content   String   @db.Text
+  
+  // 👇 PERUBAHAN DISINI:
+  // Dulu: String @db.Text
+  // Sekarang: Json (Agar bisa menampung data Editor.js yang kompleks)
+  content   Json     
+  
   thumbnail String?
+  shopeeLink  String?  
+  tokpedLink  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// --- SETTINGS & NAV ---
+
 model SiteSetting {
   id               Int      @id @default(1)
   
-  // --- IDENTITY ---
-  siteName         String   @default("AffiliatePro") // Nama di pojok kiri atas
-  footerAbout      String   @default("Portal review gadget terpercaya.") @db.Text // Konten footer kiri
-  
-  // --- HERO SECTION ---
+  // Identity
+  siteName         String   @default("AffiliatePro")
+  footerAbout      String   @default("Portal review gadget terpercaya.") @db.Text
+   
+  // Hero
   heroTitle        String   @default("Cerdas Memilih, Puas Membeli.")
   heroPromo        String   @default("Promo Akhir Tahun")
   heroDescription  String   @default("Temukan gadget terbaik.") @db.Text
-  heroImage        String?  // OPSI BARU: Jika diisi URL, animasi hilang diganti gambar ini
-  
+  heroImage        String?  
+   
   primaryBtnText   String   @default("Mulai Belanja")
   primaryBtnLink   String   @default("#products")
   secondaryBtnText String   @default("Tentang Kami")
@@ -91,18 +94,17 @@ model SiteSetting {
   updatedAt        DateTime @updatedAt
 }
 
-// --- NEW MODEL: NAVIGATION ---
 model NavbarLink {
   id        String   @id @default(uuid())
-  label     String   // Teks menu, misal: "Produk"
-  url       String   // Link, misal: "/products"
-  order     Int      @default(0) // Urutan menu
+  label     String   
+  url       String   
+  order     Int      @default(0)
   createdAt DateTime @default(now())
 }
-// ... model Admin, Product, dll tetap
+
 model Admin {
   id        String   @id @default(uuid())
   username  String   @unique
-  password  String   // Nanti passwordnya kita simpan text biasa dulu (untuk belajar), idealnya di-hash
+  password  String   
   createdAt DateTime @default(now())
 }

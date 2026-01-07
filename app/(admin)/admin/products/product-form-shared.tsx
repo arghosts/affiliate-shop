@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useEffect } from "react";
 import { Save, Loader2, Image as ImageIcon, Link as LinkIcon, Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import FormMultiImageUpload from "@/components/FormMultiImageUpload";
 
 // Interface Props
 interface Category { id: string; name: string; }
@@ -20,7 +21,7 @@ interface ProductData {
   tokpedLink?: string | null;
   pros?: string | null;
   cons?: string | null;
-  images: { url: string }[]; // Relasi gambar
+  images: string[]; // Relasi gambar
   tags: { id: string }[];    // Relasi tag
 }
 
@@ -52,13 +53,6 @@ export default function ProductFormShared({ categories, tags, action, initialDat
   // ✅ Initialize State dengan Initial Data (jika ada)
   const [name, setName] = useState(initialData?.name || "");
   const [slug, setSlug] = useState(initialData?.slug || "");
-  
-  // Map images object ke array string, atau default 1 slot kosong
-  const [imageUrls, setImageUrls] = useState<string[]>(
-    initialData?.images && initialData.images.length > 0 
-      ? initialData.images.map(img => img.url) 
-      : [""]
-  );
 
   // Auto-Slug (Hanya jalan jika user mengetik nama, dan slug masih kosong atau sama dengan nama lama)
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,26 +64,11 @@ export default function ProductFormShared({ categories, tags, action, initialDat
     }
   };
 
-  const addImageField = () => {
-    if (imageUrls.length >= 6) return toast.error("Maksimal 6 gambar.");
-    setImageUrls([...imageUrls, ""]);
-  };
-
-  const removeImageField = (index: number) => {
-    const newImages = [...imageUrls];
-    newImages.splice(index, 1);
-    setImageUrls(newImages);
-  };
-
-  const updateImageUrl = (index: number, value: string) => {
-    const newImages = [...imageUrls];
-    newImages[index] = value;
-    setImageUrls(newImages);
-  };
-
-  if (state?.status === "error") {
-    toast.error(state.message, { id: "error-toast" });
-  }
+  useEffect(() => {
+    if (state?.status === "error") {
+      toast.error(state.message, { id: "error-toast" });
+    }
+  }, [state]);
 
   return (
     <form action={formAction} className="space-y-8 max-w-5xl mx-auto">
@@ -136,41 +115,13 @@ export default function ProductFormShared({ categories, tags, action, initialDat
         </div>
       </div>
 
-      {/* --- MULTIPLE IMAGE SECTION --- */}
+      {/* --- MULTIPLE IMAGE SECTION (YANG BARU) --- */}
       <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-6 border-b pb-4">
-          <h3 className="text-lg font-bold text-coffee flex items-center gap-2">
-            <ImageIcon className="w-5 h-5 text-gold-accent" /> Galeri Gambar ({imageUrls.length}/6)
-          </h3>
-          <button type="button" onClick={addImageField} className="text-xs font-bold bg-gray-100 hover:bg-gold-accent hover:text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-1">
-            <Plus className="w-3 h-3" /> Tambah URL
-          </button>
-        </div>
-        
-        <div className="grid grid-cols-1 gap-6">
-          {imageUrls.map((url, index) => (
-            <div key={index} className="flex gap-4 items-start">
-              <div className="w-16 h-16 shrink-0 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-center overflow-hidden">
-                {url ? <img src={url} alt="Preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.src = "/file.svg")} /> : <ImageIcon className="w-6 h-6 text-gray-300" />}
-              </div>
-              <div className="flex-1 flex gap-2">
-                <input 
-                  name="images" 
-                  value={url}
-                  onChange={(e) => updateImageUrl(index, e.target.value)}
-                  className="input-admin"
-                  placeholder="URL Gambar..."
-                  required={index === 0}
-                />
-                {imageUrls.length > 1 && (
-                  <button type="button" onClick={() => removeImageField(index)} className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors">
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <FormMultiImageUpload 
+           name="images" // Nanti server terima array File "images"
+           initialData={initialData?.images || []} // Array URL dari DB
+           maxFiles={6}
+        />
       </div>
 
       {/* --- LINKS & PROS/CONS --- */}

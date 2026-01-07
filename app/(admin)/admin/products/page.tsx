@@ -22,7 +22,6 @@ export default async function ProductListPage() {
     include: {
       category: true,
       tags: true,
-      images: true,
     },
   });
 
@@ -86,7 +85,7 @@ export default async function ProductListPage() {
                       <div className="relative w-16 h-16 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden shrink-0">
                         {product.images[0] ? (
                           <Image 
-                            src={product.images[0].url} 
+                            src={product.images[0]} 
                             alt={product.name} 
                             fill 
                             className="object-cover"

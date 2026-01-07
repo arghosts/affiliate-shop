@@ -1,25 +1,20 @@
 import { prisma } from "@/lib/prisma";
-import PostForm from "../../post-form"; // Import Form Shared
-import { updatePost } from "../../actions"; // Import Action Update
 import { notFound } from "next/navigation";
+import PostForm from "../../post-form"; 
+import { updatePost } from "../../actions"; 
 
 export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
-  // 1. Ambil ID dari URL
   const { id } = await params;
 
-  // 2. Cari Artikel di Database berdasarkan ID
   const post = await prisma.post.findUnique({
     where: { id },
   });
 
-  // 3. Jika tidak ketemu, lempar ke halaman 404
-  if (!post) {
-    notFound();
-  }
+  if (!post) notFound();
 
   return (
-    <div className="pb-20">
-      {/* 4. Panggil Form dengan action 'updatePost' DAN data artikel lama */}
+    <div className="pb-20 pt-6 px-6">
+      {/* Kita kirim updatePost mentah-mentah, nanti PostForm yang ngatur cara panggilnya */}
       <PostForm 
         action={updatePost} 
         initialData={post} 

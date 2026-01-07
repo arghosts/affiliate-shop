@@ -20,7 +20,15 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "placehold.co", // Useful for placeholders
       },
+      {
+        protocol: 'https',
+        hostname: 'ik.imagekit.io',
+        port: '',
+        pathname: '/jagopilih/**', // Allow only your folder
+      },
     ],
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 };
 
