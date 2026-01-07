@@ -2,23 +2,22 @@
 
 import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 
-export default function SearchBar() {
+// 1. Pisahkan Logic ke komponen internal (bukan default export)
+function SearchBarContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams(); // Hook ini aman karena dibungkus Suspense di parent
   
-  // Ambil nilai default dari URL jika ada (biar input gak kosong pas di-refresh)
   const [query, setQuery] = useState(searchParams.get("q") || "");
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault(); // Mencegah reload halaman full
+    e.preventDefault();
     
-    // Redirect ke Homepage dengan parameter ?q=...
     if (query.trim()) {
       router.push(`/?q=${encodeURIComponent(query)}#products`);
     } else {
-      router.push("/"); // Kalau kosong, balik ke home murni
+      router.push("/");
     }
   };
 
@@ -35,5 +34,15 @@ export default function SearchBar() {
         className="w-full pl-10 pr-4 py-2 bg-gray-100 border-none rounded-full text-sm font-bold text-coffee focus:ring-2 focus:ring-gold-accent/20 outline-none transition-all placeholder:text-gray-400/80"
       />
     </form>
+  );
+}
+
+// 2. Export Default hanyalah Wrapper (Pembungkus)
+export default function SearchBar() {
+  return (
+    // Suspense diletakkan di sini untuk membungkus komponen yang pakai useSearchParams
+    <Suspense fallback={<div className="w-64 h-10 bg-gray-100 rounded-full animate-pulse" />}>
+      <SearchBarContent />
+    </Suspense>
   );
 }

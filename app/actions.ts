@@ -46,9 +46,7 @@ export async function createProduct(prevState: any, formData: FormData) {
         shopeeLink,
         pros,
         cons,
-        images: {
-          create: validImages.map(url => ({ url }))
-        }
+        images: validImages,
       }
     });
 
