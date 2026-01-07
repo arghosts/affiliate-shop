@@ -1,26 +1,26 @@
 import { prisma } from "@/lib/prisma";
-import ProductFormShared from "../product-form-shared"; // Pakai Shared Form
-import { createProductAction } from "./actions";       // Pakai Action Create lama
+import ProductFormShared from "../product-form-shared"; 
+// 👇 PERBAIKAN: Ganti 'createProductAction' menjadi 'createProduct'
+import { createProduct } from "./actions";       
 
 export const dynamic = "force-dynamic";
 
 export default async function NewProductPage() {
-  const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
-  const tags = await prisma.tag.findMany({ orderBy: { name: 'asc' } });
+  // Ambil data pendukung untuk form
+  const categories = await prisma.category.findMany();
+  const tags = await prisma.tag.findMany();
 
   return (
-    <div className="pb-20">
-      <div className="mb-8">
-        <h1 className="text-3xl font-black text-coffee">Tambah Produk Baru</h1>
-        <p className="text-gray-500">Masukkan detail produk affiliate.</p>
-      </div>
-
-      <ProductFormShared 
-        categories={categories} 
-        tags={tags} 
-        action={createProductAction} // Pakai action Create
-        initialData={null}           // Data kosong
-      />
+    <div className="pb-20 pt-6 px-6">
+       <h1 className="text-2xl font-bold mb-6 text-gray-800">Tambah Produk Baru</h1>
+       
+       {/* Panggil Shared Form */}
+       <ProductFormShared
+         categories={categories}
+         tags={tags}
+         action={createProduct} // ✅ Pass function action yang benar
+         initialData={null}     // null karena ini halaman Create
+       />
     </div>
   );
 }
