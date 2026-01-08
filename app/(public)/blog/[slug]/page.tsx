@@ -175,7 +175,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </div>
 
         {post.thumbnail && (
-          <div className="aspect-[21/9] w-full relative rounded-3xl overflow-hidden shadow-xl bg-gray-200">
+          <div className="aspect-video w-full relative rounded-3xl overflow-hidden shadow-xl bg-gray-200">
             <img 
               src={post.thumbnail} 
               alt={post.title} 
