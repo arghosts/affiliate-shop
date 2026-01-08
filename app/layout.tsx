@@ -11,15 +11,15 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://jagopilih.vercel.app"),
   
   title: {
-    default: "JagoPilih - Rekomendasi Gadget Terbaik",
+    default: "JagoPilih - Rekomendasi Belanja Terbaik",
     template: "%s | JagoPilih",
   },
-  description: "Temukan gadget terbaik dengan harga termurah. Review jujur dan link affiliate terpercaya.",
+  description: "Belanja di marketplace tanpa zonk. Review jujur dan link affiliate terpercaya.",
   
   // Konfigurasi OpenGraph (untuk tampilan di WA/Twitter)
   openGraph: {
-    title: "JagoPilih - Rekomendasi Gadget Terbaik",
-    description: "Temukan gadget impian dengan harga terbaik.",
+    title: "JagoPilih - Rekomendasi Belanja Terbaik",
+    description: "Belanja di marketplace tanpa zonk.",
     url: "https://jagopilih.vercel.app",
     siteName: "JagoPilih",
     locale: "id_ID",
