@@ -6,6 +6,8 @@ import { Plus, Edit, Trash2, FileText, Calendar } from "lucide-react";
 // Idealnya dipisah file, tapi biar cepat kita taruh sini pakai 'use server' action di form
 import DeleteButton from "./delete-button"; // ⚠️ Kita buat file ini sebentar lagi
 
+export const dynamic = "force-dynamic";
+
 export default async function PostListPage() {
   const posts = await prisma.post.findMany({
     orderBy: { createdAt: "desc" },
