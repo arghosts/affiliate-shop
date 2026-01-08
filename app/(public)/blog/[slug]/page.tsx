@@ -25,6 +25,48 @@ const renderBlock = (block: any) => {
           <span dangerouslySetInnerHTML={{ __html: block.data.text }} />
         </p>
       );
+      // 👇 TAMBAHAN UNTUK TABLE
+    case "table":
+      const tableData = block.data;
+      const rows = tableData.content || [];
+      const withHeadings = tableData.withHeadings; // Cek apakah baris pertama adalah header
+
+      // Pisahkan Header dan Body
+      const headerRow = withHeadings ? rows[0] : null;
+      const bodyRows = withHeadings ? rows.slice(1) : rows;
+
+      return (
+        <div key={block.id} className="overflow-x-auto my-8 rounded-xl border border-gray-200 shadow-sm">
+           <table className="w-full text-left border-collapse bg-white">
+              {/* Render HEAD jika withHeadings: true */}
+              {withHeadings && (
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    {headerRow.map((cell: string, idx: number) => (
+                      <th key={idx} className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">
+                        <span dangerouslySetInnerHTML={{ __html: cell }} />
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+              )}
+
+              {/* Render BODY */}
+              <tbody className="divide-y divide-gray-100">
+                {bodyRows.map((row: string[], rowIdx: number) => (
+                   <tr key={rowIdx} className="hover:bg-gray-50/50 transition-colors">
+                      {row.map((cell: string, cellIdx: number) => (
+                        <td key={cellIdx} className="px-6 py-4 text-sm text-gray-700 leading-relaxed border-r border-gray-100 last:border-r-0">
+                           {/* Cell bisa berisi HTML (bold/italic) dari editor */}
+                           <span dangerouslySetInnerHTML={{ __html: cell }} />
+                        </td>
+                      ))}
+                   </tr>
+                ))}
+              </tbody>
+           </table>
+        </div>
+      );
 
     case "list":
     case "checklist":

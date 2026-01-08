@@ -14,6 +14,7 @@
     "@editorjs/header": "^2.8.8",
     "@editorjs/image": "^2.10.3",
     "@editorjs/list": "^2.0.9",
+    "@editorjs/table": "^2.4.5",
     "@prisma/client": "^5.22.0",
     "bcryptjs": "^3.0.3",
     "framer-motion": "^12.23.26",

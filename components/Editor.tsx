@@ -6,6 +6,7 @@ import Header from "@editorjs/header";
 import List from "@editorjs/list"; 
 import ImageTool from "@editorjs/image";
 import Embed from "@editorjs/embed";
+import Table from "@editorjs/table";
 
 interface EditorProps {
   data?: any;
@@ -38,7 +39,16 @@ export default function Editor({ data, onChange, holder }: EditorProps) {
               defaultStyle: 'unordered'
             }
           },
-          // 1. Tool Embed (Youtube, Twitter, IG, dll)
+          // 👇 Daftarkan Table Tool Disini
+          table: {
+            class: Table as any,
+            inlineToolbar: true,
+            config: {
+              rows: 2, // Baris default saat insert
+              cols: 3, // Kolom default saat insert
+            },
+          },
+          // Tool Embed (Youtube, Twitter, IG, dll)
           embed: {
             class: Embed,
             inlineToolbar: true,
@@ -52,7 +62,7 @@ export default function Editor({ data, onChange, holder }: EditorProps) {
             },
           },
 
-          // 2. Tool Image (Upload ke API kita tadi)
+          // Tool Image (Upload ke API kita tadi)
           image: {
             class: ImageTool,
             config: {
