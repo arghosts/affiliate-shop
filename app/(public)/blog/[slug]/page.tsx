@@ -209,7 +209,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                       {String(rawContent)}
                    </div>
                 ) : (
-                   <div className="font-serif">
+                   <div className="font-serif [&_a]:text-orange-600 [&_a]:underline hover:[&_a]:text-orange-800 [&_a]:font-bold">
                       {contentBlocks.map((block: any) => renderBlock(block))}
                       
                       {contentBlocks.length === 0 && (
