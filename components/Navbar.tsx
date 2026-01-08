@@ -18,7 +18,7 @@ export default async function Navbar() {
         
         {/* LOGO */}
         <Link href="/" className="text-2xl font-black text-coffee tracking-tighter">
-          {siteName}<span className="text-gold-accent">.com</span>
+          {siteName}<span className="text-gold-accent">.vercel.app</span>
         </Link>
 
         {/* SEARCH BAR (Tengah) - ✅ PASANG DISINI */}

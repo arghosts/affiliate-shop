@@ -56,13 +56,13 @@ export default async function HomePage({
 
   // Helper Hero Data
   const heroData = {
-    title: siteSettings?.heroTitle ?? "Gadget Pilihan Masa Kini",
-    promo: siteSettings?.heroPromo ?? "Promo Spesial",
-    description: siteSettings?.heroDescription ?? "Deskripsi default.",
+    title: siteSettings?.heroTitle ?? "Belanja Pilihan Masa Kini",
+    promo: siteSettings?.heroPromo ?? "Independent Review",
+    description: siteSettings?.heroDescription ?? "Belanja Tanpa Rasa Takut Zonk.",
     primaryBtnText: siteSettings?.primaryBtnText ?? "Mulai Belanja",
     primaryBtnLink: siteSettings?.primaryBtnLink ?? "#products",
-    secondaryBtnText: siteSettings?.secondaryBtnText ?? "Tentang Kami",
-    secondaryBtnLink: siteSettings?.secondaryBtnLink ?? "/about",
+    secondaryBtnText: siteSettings?.secondaryBtnText ?? "Cari Review",
+    secondaryBtnLink: siteSettings?.secondaryBtnLink ?? "/blog",
     heroImage: siteSettings?.heroImage, 
   };
 
