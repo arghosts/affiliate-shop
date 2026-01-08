@@ -48,6 +48,49 @@ const renderBlock = (block: any) => {
           })}
         </ListTag>
       );
+      // ✅ NEW: Menangani Gambar (Image Tool)
+    case "image":
+      return (
+        <figure key={block.id} className="my-8">
+          <div className="relative w-full rounded-xl overflow-hidden shadow-sm bg-gray-100 border border-gray-200">
+            {/* Menggunakan tag img standar agar kompatibel dengan berbagai sumber URL */}
+            <img 
+              src={block.data.file.url} 
+              alt={block.data.caption || "Gambar Artikel"} 
+              className="w-full h-auto object-cover"
+              loading="lazy"
+            />
+          </div>
+          {block.data.caption && (
+            <figcaption className="text-center text-sm text-gray-500 mt-2 italic">
+              {/* Render caption dengan HTML safe (untuk link source dsb) */}
+              <span dangerouslySetInnerHTML={{ __html: block.data.caption }} />
+            </figcaption>
+          )}
+        </figure>
+      );
+
+    // ✅ NEW: Menangani Embed (YouTube, Twitter, dll)
+    case "embed":
+      return (
+        <figure key={block.id} className="my-8 w-full flex flex-col items-center">
+          <div className="w-full relative pt-[56.25%] bg-gray-100 rounded-xl overflow-hidden shadow-sm border border-gray-200">
+             {/* Wrapper pt-[56.25%] membuat rasio 16:9 otomatis */}
+            <iframe
+              src={block.data.embed}
+              className="absolute top-0 left-0 w-full h-full"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowFullScreen
+              title="Embedded content"
+            />
+          </div>
+          {block.data.caption && (
+            <figcaption className="text-center text-sm text-gray-500 mt-2 italic">
+              <span dangerouslySetInnerHTML={{ __html: block.data.caption }} />
+            </figcaption>
+          )}
+        </figure>
+      );
 
     default:
       return null;
