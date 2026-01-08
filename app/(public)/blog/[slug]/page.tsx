@@ -27,12 +27,25 @@ const renderBlock = (block: any) => {
       );
 
     case "list":
-      const ListTag = block.data.style === "ordered" ? "ol" : "ul";
+    case "checklist":
+      const isOrdered = block.data.style === "ordered";
+      const ListTag = isOrdered ? "ol" : "ul";
+      const listStyle = isOrdered ? "list-decimal" : "list-disc";
+      
       return (
-        <ListTag key={block.id} className="list-disc list-inside mb-6 pl-4 space-y-2 text-gray-700 text-lg">
-          {block.data.items.map((item: string, i: number) => (
-            <li key={i} dangerouslySetInnerHTML={{ __html: item }} />
-          ))}
+        <ListTag key={block.id} className={`${listStyle} list-inside mb-6 pl-4 space-y-2 text-gray-700 text-lg`}>
+          {block.data.items.map((item: any, i: number) => {
+            // 🔍 SYSTEMIZER CHECK: 
+            // If item is string -> use it directly
+            // If item is object -> extract 'content' or 'text' property
+            const content = typeof item === 'string' 
+              ? item 
+              : item.content || item.text || ""; 
+
+            return (
+              <li key={i} dangerouslySetInnerHTML={{ __html: content }} />
+            );
+          })}
         </ListTag>
       );
 
