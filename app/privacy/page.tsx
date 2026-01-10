@@ -51,7 +51,7 @@ export default function PrivacyPage() {
           
           <div className="flex items-center gap-2 bg-white/50 px-4 py-2 rounded-full border border-surface backdrop-blur-sm">
              <CalendarIcon className="w-4 h-4 text-gold-accent" />
-             <span className="text-xs font-bold text-coffee uppercase tracking-wider">
+             <span className="text-xs font-bold text-coffee uppercase tracking-wider" suppressHydrationWarning>
                Update: {lastUpdated}
              </span>
           </div>

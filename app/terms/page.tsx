@@ -37,7 +37,7 @@ export default function TermsPage() {
             <span className="bg-coffee/5 px-3 py-1 rounded-full border border-coffee/10">
               Terms of Service
             </span>
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-2" suppressHydrationWarning>
               <CalendarIcon className="w-4 h-4 text-gold-accent" />
               Terakhir Diperbarui: {lastUpdated}
             </span>
