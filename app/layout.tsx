@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google"; // Atau font yang Anda pakai (Geist/Inter)
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Analytics } from "@vercel/analytics/react";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"] }); // Sesuaikan dengan font Anda
 
