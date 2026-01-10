@@ -4,8 +4,8 @@ import { Calendar, User, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Blog & Review Gadget - JagoPilih",
-  description: "Kumpulan artikel review, tips, dan rekomendasi gadget terbaik.",
+  title: "Blog & Review Belanja - JagoPilih",
+  description: "Kumpulan artikel review, tips, dan rekomendasi belanja terbaik.",
 };
 
 // Helper untuk mengambil potongan teks dari JSON Editor.js
@@ -71,7 +71,7 @@ export default async function BlogIndexPage() {
               {/* Content */}
               <div className="p-6 flex flex-col flex-1">
                 {/* Meta Date */}
-                <div className="flex items-center gap-2 text-xs font-bold text-orange-600 mb-3 uppercase tracking-wider">
+                <div className="flex items-center gap-2 text-xs font-bold text-orange-600 mb-3 uppercase tracking-wider" suppressHydrationWarning>
                   <Calendar className="w-3 h-3" />
                   {new Date(post.createdAt).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' })}
                 </div>
@@ -80,10 +80,10 @@ export default async function BlogIndexPage() {
                   {post.title}
                 </h2>
 
-                <p className="text-gray-500 text-sm leading-relaxed mb-6 line-clamp-3 flex-1">
+                <div className="text-gray-500 text-sm leading-relaxed mb-6 line-clamp-3 flex-1">
                   {/* Gunakan helper snippet di sini */}
                   <span dangerouslySetInnerHTML={{ __html: getSnippet(post.content) }} />
-                </p>
+                </div>
 
                 <div className="flex items-center text-sm font-bold text-gray-900 group-hover:text-orange-600 mt-auto">
                   Baca Selengkapnya <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
