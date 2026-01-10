@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Calendar, User, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
+import Image from "next/image"; // 👈 TAMBAHKAN INI
 
 export const metadata: Metadata = {
   title: "Blog & Review Belanja - JagoPilih",
@@ -45,54 +46,81 @@ export default async function BlogIndexPage() {
         </div>
 
         {/* Grid Artikel */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {posts.map((post) => (
-            <Link 
-              href={`/blog/${post.slug}`} 
-              key={post.id} 
-              className="group bg-white rounded-3xl overflow-hidden border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full"
-            >
-              
-              {/* Thumbnail */}
-              <div className="aspect-video w-full bg-gray-200 relative overflow-hidden">
-                {post.thumbnail ? (
-                  <img 
-                    src={post.thumbnail} 
-                    alt={post.title} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    No Image
-                  </div>
-                )}
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+  {posts.map((post, index) => (
+    // 1. Ganti <Link> pembungkus utama menjadi <div> biasa
+    <div 
+      key={post.id} 
+      className="group bg-white rounded-3xl overflow-hidden border border-coffee/5 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col"
+    >
+      {/* 2. Bungkus THUMBNAIL dengan Link sendiri */}
+      <Link href={`/blog/${post.slug}`} className="relative aspect-video bg-gray-100 overflow-hidden block">
+        {post.thumbnail ? (
+          <Image
+            src={post.thumbnail}
+            alt={post.title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            priority={index === 0}
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-coffee/5 text-coffee/20">
+            <span className="font-black text-4xl">JP.</span>
+          </div>
+        )}
+      </Link>
 
-              {/* Content */}
-              <div className="p-6 flex flex-col flex-1">
-                {/* Meta Date */}
-                <div className="flex items-center gap-2 text-xs font-bold text-orange-600 mb-3 uppercase tracking-wider" suppressHydrationWarning={true}>
-                  <Calendar className="w-3 h-3" />
-                  {new Date(post.createdAt).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' })}
-                </div>
-
-                <h2 className="text-xl font-bold text-gray-900 mb-3 leading-tight group-hover:text-orange-600 transition-colors line-clamp-2">
-                  {post.title}
-                </h2>
-
-                <div className="text-gray-500 text-sm leading-relaxed mb-6 line-clamp-3 flex-1">
-                  {/* Gunakan helper snippet di sini */}
-                  <span dangerouslySetInnerHTML={{ __html: getSnippet(post.content) }} />
-                </div>
-
-                <div className="flex items-center text-sm font-bold text-gray-900 group-hover:text-orange-600 mt-auto">
-                  Baca Selengkapnya <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-
-            </Link>
-          ))}
+      {/* Content Text */}
+      <div className="p-8 flex flex-col flex-1">
+        
+        {/* Date */}
+        <div className="flex items-center gap-2 text-xs font-bold text-gold-accent mb-4 uppercase tracking-widest" suppressHydrationWarning>
+          <Calendar className="w-3 h-3" />
+          {new Date(post.createdAt).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}
         </div>
+
+        {/* 3. Bungkus JUDUL dengan Link sendiri */}
+        <Link href={`/blog/${post.slug}`}>
+          <h2 className="text-2xl font-bold text-coffee mb-4 leading-tight group-hover:text-gold-accent transition-colors line-clamp-2">
+            {post.title}
+          </h2>
+        </Link>
+
+        {/* Snippet Content */}
+        <div className="text-muted-brown text-sm leading-relaxed mb-6 line-clamp-3 flex-1">
+           <span dangerouslySetInnerHTML={{ __html: getSnippet(post.content) }} />
+        </div>
+
+        {/* --- AREA TOMBOL ACTION --- */}
+        <div className="mt-auto space-y-4">
+          
+          {/* Tombol Affiliate (Link Eksternal) - AMAN karena di luar Link Artikel */}
+          {(post.shopeeLink || post.tokpedLink) && (
+             <div className="flex gap-2">
+                {post.shopeeLink && (
+                  <a href={post.shopeeLink} target="_blank" rel="noreferrer" className="flex-1 bg-orange-50 text-orange-600 text-xs font-bold py-2 px-3 rounded-lg text-center hover:bg-orange-100">
+                    Shopee
+                  </a>
+                )}
+                {post.tokpedLink && (
+                  <a href={post.tokpedLink} target="_blank" rel="noreferrer" className="flex-1 bg-green-50 text-green-600 text-xs font-bold py-2 px-3 rounded-lg text-center hover:bg-green-100">
+                    Tokopedia
+                  </a>
+                )}
+             </div>
+          )}
+
+          {/* Link "Baca Selengkapnya" */}
+          <Link href={`/blog/${post.slug}`} className="flex items-center text-sm font-bold text-coffee group-hover:text-gold-accent gap-2">
+            Baca Selengkapnya <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+          </Link>
+
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
 
         {posts.length === 0 && (
           <div className="text-center py-20 text-gray-400">

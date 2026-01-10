@@ -43,7 +43,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id">
-      <body className={inter.className}>{children}<SpeedInsights /></body>
+      <body className={inter.className}>{children}{process.env.NODE_ENV !== 'development' && <SpeedInsights />}</body>
     </html>
   );
 }
