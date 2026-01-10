@@ -35,6 +35,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
           alt={product.name}
           fill
           className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+          sizes="(max-width: 1024px) 100vw, 50vw"
         />
         <div className="absolute top-3 left-3">
           {/* Badge Category mengikuti tema Coffee */}
