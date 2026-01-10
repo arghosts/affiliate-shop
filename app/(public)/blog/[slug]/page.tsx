@@ -101,6 +101,7 @@ const renderBlock = (block: any) => {
               alt={block.data.caption || "Gambar Artikel"} 
               className="w-full h-auto object-cover"
               loading="lazy"
+              sizes="(max-width: 768px) 100vw, 50vw"
             />
           </div>
           {block.data.caption && (
@@ -220,8 +221,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <div className="aspect-video w-full relative rounded-3xl overflow-hidden shadow-xl bg-gray-200">
             <img 
               src={post.thumbnail} 
-              alt={post.title} 
+              alt={post.title}
               className="w-full h-full object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
           </div>

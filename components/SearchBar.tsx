@@ -30,7 +30,7 @@ function SearchBarContent() {
         name="q"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Cari set up..." 
+        placeholder="Beli apa hari ini..." 
         className="w-full pl-10 pr-4 py-2 bg-gray-100 border-none rounded-full text-sm font-bold text-coffee focus:ring-2 focus:ring-gold-accent/20 outline-none transition-all placeholder:text-gray-400/80"
       />
     </form>
