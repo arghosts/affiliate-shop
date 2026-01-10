@@ -110,7 +110,7 @@ export default async function ProductDetail({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           
           {/* LEFT: CAROUSEL (5 Columns) */}
-          <div className="lg:col-span-5 bg-white p-6 rounded-[2rem] shadow-sm border border-surface sticky top-28">
+          <div className="lg:col-span-5 bg-white p-6 rounded-[2rem] shadow-sm border border-surface lg:sticky lg:top-28">
              <ImageCarousel images={product.images.length > 0 ? product.images : [mainImage]} productName={product.name} />
           </div>
 
