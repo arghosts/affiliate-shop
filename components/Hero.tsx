@@ -111,7 +111,7 @@ export default function Hero({
              <div className="relative z-20 bg-white/60 backdrop-blur-md p-4 rounded-[2.5rem] border border-white/80 shadow-2xl shadow-coffee/5">
                 {heroImage ? (
                    <div className="relative aspect-square rounded-[2rem] overflow-hidden bg-gray-100">
-                     <Image src={heroImage} alt={title} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
+                     <Image src={heroImage} alt={title} fill className="object-cover" sizes="(max-width: 1024px) 1px, 50vw" />
                    </div>
                 ) : (
                    // Placeholder Animation jika tidak ada gambar
