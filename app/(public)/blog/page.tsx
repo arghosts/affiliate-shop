@@ -71,7 +71,7 @@ export default async function BlogIndexPage() {
               {/* Content */}
               <div className="p-6 flex flex-col flex-1">
                 {/* Meta Date */}
-                <div className="flex items-center gap-2 text-xs font-bold text-orange-600 mb-3 uppercase tracking-wider" suppressHydrationWarning>
+                <div className="flex items-center gap-2 text-xs font-bold text-orange-600 mb-3 uppercase tracking-wider" suppressHydrationWarning={true}>
                   <Calendar className="w-3 h-3" />
                   {new Date(post.createdAt).toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' })}
                 </div>
