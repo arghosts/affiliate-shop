@@ -1,0 +1,140 @@
+.
+├── .github
+├── app
+│   ├── (admin)
+│   │   └── admin
+│   │       ├── imagekit
+│   │       │   └── page.tsx
+│   │       ├── import
+│   │       │   ├── actions.ts
+│   │       │   └── page.tsx
+│   │       ├── menus
+│   │       │   ├── actions.ts
+│   │       │   ├── menu-manager.tsx
+│   │       │   └── page.tsx
+│   │       ├── posts
+│   │       │   ├── [id]
+│   │       │   │   └── edit
+│   │       │   │       └── page.tsx
+│   │       │   ├── new
+│   │       │   │   ├── loading.tsx
+│   │       │   │   └── page.tsx
+│   │       │   ├── actions.ts
+│   │       │   ├── delete-button.tsx
+│   │       │   ├── loading.tsx
+│   │       │   ├── page.tsx
+│   │       │   └── post-form.tsx
+│   │       ├── products
+│   │       │   ├── [id]
+│   │       │   │   └── edit
+│   │       │   │       ├── actions.ts
+│   │       │   │       └── page.tsx
+│   │       │   ├── new
+│   │       │   │   ├── actions.ts
+│   │       │   │   └── page.tsx
+│   │       │   ├── actions.ts
+│   │       │   ├── delete-button.tsx
+│   │       │   ├── page.tsx
+│   │       │   └── product-form-shared.tsx
+│   │       ├── settings
+│   │       │   ├── actions.ts
+│   │       │   ├── page.tsx
+│   │       │   └── settings-form.tsx
+│   │       ├── tags
+│   │       │   ├── actions.ts
+│   │       │   ├── page.tsx
+│   │       │   └── tag-manager.tsx
+│   │       ├── layout.tsx
+│   │       └── page.tsx
+│   ├── (auth)
+│   │   └── login
+│   │       ├── actions.ts
+│   │       ├── layout.tsx
+│   │       └── page.tsx
+│   ├── (public)
+│   │   ├── blog
+│   │   │   ├── [slug]
+│   │   │   │   └── page.tsx
+│   │   │   └── page.tsx
+│   │   ├── product
+│   │   │   └── [slug]
+│   │   │       └── page.tsx
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── api
+│   │   └── editor
+│   │       └── upload
+│   │           └── route.ts
+│   ├── privacy
+│   │   └── page.tsx
+│   ├── terms
+│   │   └── page.tsx
+│   ├── actions.ts
+│   ├── globals.css
+│   ├── icon.tsx
+│   ├── layout.tsx
+│   ├── robots.ts
+│   └── sitemap.ts
+├── components
+│   ├── Editor.tsx
+│   ├── FloatingCTA.tsx
+│   ├── Footer.tsx
+│   ├── FormImageUpload.tsx
+│   ├── FormMultiImageUpload.tsx
+│   ├── Hero.tsx
+│   ├── ImageCarousel.tsx
+│   ├── ImageUploader.tsx
+│   ├── Navbar.tsx
+│   ├── ProductCard.tsx
+│   ├── SearchBar.tsx
+│   └── ShareWidget.tsx
+├── config
+│   └── site.ts
+├── lib
+│   ├── imagekit.ts
+│   ├── prisma.ts
+│   ├── session.ts
+│   └── social-share.ts
+├── prisma
+│   ├── migrations
+│   │   ├── 20260106073607_change_post_content_to_json
+│   │   │   └── migration.sql
+│   │   ├── 20260106183344_add_affiliate_links_to_post
+│   │   │   └── migration.sql
+│   │   ├── 20260107065242_simplify_product_images
+│   │   │   └── migration.sql
+│   │   └── migration_lock.toml
+│   ├── schema.prisma
+│   └── seed.ts
+├── public
+│   ├── Hero-image.png:Zone.Identifier
+│   ├── dji-drone.png
+│   ├── dji-drone.png:Zone.Identifier
+│   ├── dji5pro-2.png
+│   ├── dji5pro-2.png:Zone.Identifier
+│   ├── dji5pro.png
+│   ├── dji5pro.png:Zone.Identifier
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── hero-image.png:Zone.Identifier
+│   ├── hero-image1.png
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── .env
+├── .gitignore
+├── .roomodes
+├── README.md
+├── docker-compose.yml
+├── eslint.config.mjs
+├── middleware.ts
+├── next-env.d.ts
+├── next.config.ts
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── struktur_project.txt
+├── tsconfig.json
+└── typings.d.ts
+
+39 directories, 99 files

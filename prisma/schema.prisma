@@ -58,12 +58,12 @@ model Post {
   id        String   @id @default(uuid())
   title     String
   slug      String   @unique
-  
+   
   // 👇 PERUBAHAN DISINI:
   // Dulu: String @db.Text
   // Sekarang: Json (Agar bisa menampung data Editor.js yang kompleks)
   content   Json     
-  
+   
   thumbnail String?
   shopeeLink  String?  
   tokpedLink  String?
@@ -75,7 +75,7 @@ model Post {
 
 model SiteSetting {
   id               Int      @id @default(1)
-  
+   
   // Identity
   siteName         String   @default("AffiliatePro")
   footerAbout      String   @default("Portal review gadget terpercaya.") @db.Text
@@ -107,4 +107,12 @@ model Admin {
   username  String   @unique
   password  String   
   createdAt DateTime @default(now())
+}
+
+model AdminNote {
+  id        String   @id @default(uuid())
+  title     String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
