@@ -7,27 +7,42 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- PRODUCT SECTION ---
+// --- ENUMS (NEW) ---
+// Ini mendefinisikan jenis toko untuk membedakan perlakuan (Scraping vs Manual)
+enum MarketplaceType {
+  SHOPEE
+  TOKOPEDIA
+  TIKTOK
+  LAZADA
+  BLIBLI
+  WEBSITE_RESMI
+  WHATSAPP_LOKAL  // Untuk toko "Boring but True" (Bojonegoro, dll)
+  OFFLINE_STORE   // Untuk toko fisik tanpa link, hanya alamat
+}
+
+// --- PRODUCT SECTION (UPDATED) ---
 
 model Product {
   id          String   @id @default(uuid())
   name        String
   slug        String   @unique
   description String?  @db.Text
-  price       Decimal  @db.Decimal(12, 2)
-   
-  // External Links
-  shopeeLink  String?
-  tokpedLink  String?
-   
-  // Pros & Cons (Tetap String dulu, nanti diparsing di frontend)
-  pros        String?  @db.Text
-  cons        String?  @db.Text
+  
+  // ❌ HAPUS: price, shopeeLink, tokpedLink (Dipindah ke ProductLink)
+  // ✅ BARU: Cache harga terendah & tertinggi untuk sorting/display cepat
+  minPrice    Decimal? @db.Decimal(15, 2) 
+  maxPrice    Decimal? @db.Decimal(15, 2)
+
+  // External Links Relation (1 Product = Many Shops)
+  links       ProductLink[]
+
+  // Pros & Cons
+  pros        String?  @db.Text 
+  cons        String?  @db.Text 
    
   images      String[] @default([])
   isFeatured  Boolean  @default(false)
    
-  // RELATIONS
   categoryId  String?
   category    Category? @relation(fields: [categoryId], references: [id])
 
@@ -36,6 +51,51 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+// ✅ MODEL BARU: PRODUCT LINK (Jembatan Scraping & Manual)
+model ProductLink {
+  id              String          @id @default(uuid())
+  
+  // Relasi ke Produk Utama
+  productId       String
+  product         Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Identitas Toko
+  marketplace     MarketplaceType
+  storeName       String          // Misal: "Samsung Official" atau "Toko Pak Budi"
+  region          String?         // PENTING: Isi "Bojonegoro" untuk filter lokal, atau NULL untuk Nasional
+  isVerified      Boolean         @default(false) // Centang ini jika toko sudah Anda kurasi aman
+
+  // URL Management
+  originalUrl     String          @db.Text // URL Target untuk Bot Scraping
+  affiliateUrl    String?         @db.Text // URL Cuan (Redirect user ke sini)
+  
+  // Harga & Stok (Dinamis)
+  currentPrice    Decimal         @db.Decimal(15, 2)
+  isStockReady    Boolean         @default(true)
+  
+  // Monitoring
+  lastCheckedAt   DateTime?       // Kapan terakhir Bot/Anda cek harga
+  priceHistory    PriceHistory[]  // Relasi ke log sejarah harga
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+// ✅ MODEL BARU: PRICE HISTORY (Log Kebenaran)
+model PriceHistory {
+  id            Int         @id @default(autoincrement()) // Pakai Int biar hemat storage index
+  
+  productLinkId String
+  productLink   ProductLink @relation(fields: [productLinkId], references: [id], onDelete: Cascade)
+  
+  price         Decimal     @db.Decimal(15, 2)
+  recordedAt    DateTime    @default(now())
+
+  @@index([productLinkId, recordedAt]) // Biar query grafik cepat
+}
+
+// --- SISANYA TETAP SAMA (Hanya sedikit penyesuaian) ---
 
 model Category {
   id        String    @id @default(uuid())
@@ -52,45 +112,32 @@ model Tag {
   products  Product[] 
 }
 
-// --- BLOG SECTION (YANG BERUBAH) ---
-
 model Post {
   id        String   @id @default(uuid())
   title     String
   slug      String   @unique
-   
-  // 👇 PERUBAHAN DISINI:
-  // Dulu: String @db.Text
-  // Sekarang: Json (Agar bisa menampung data Editor.js yang kompleks)
-  content   Json     
-   
+  content   Json     // Support Editor.js
   thumbnail String?
-  shopeeLink  String?  
-  tokpedLink  String?
+  
+  // Blog post mungkin masih butuh link referensi langsung, opsional
+  referenceLink String? 
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-// --- SETTINGS & NAV ---
-
 model SiteSetting {
   id               Int      @id @default(1)
-   
-  // Identity
-  siteName         String   @default("AffiliatePro")
-  footerAbout      String   @default("Portal review gadget terpercaya.") @db.Text
-   
-  // Hero
-  heroTitle        String   @default("Cerdas Memilih, Puas Membeli.")
-  heroPromo        String   @default("Promo Akhir Tahun")
-  heroDescription  String   @default("Temukan gadget terbaik.") @db.Text
-  heroImage        String?  
-   
-  primaryBtnText   String   @default("Mulai Belanja")
+  siteName         String   @default("Jagopilih") // Update default name
+  footerAbout      String   @default("Kurasi harga jujur dan toko lokal terpercaya.") @db.Text
+  heroTitle        String   @default("Cek Harga Asli, Bukan Harga Diskon Palsu.")
+  heroPromo        String   @default("Data Real-Time")
+  heroDescription  String   @default("Bandingkan harga marketplace nasional dengan toko tetangga Anda.") @db.Text
+  heroImage        String?
+  primaryBtnText   String   @default("Cari Produk")
   primaryBtnLink   String   @default("#products")
   secondaryBtnText String   @default("Tentang Kami")
   secondaryBtnLink String   @default("/about")
-
   updatedAt        DateTime @updatedAt
 }
 
