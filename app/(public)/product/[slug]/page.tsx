@@ -42,6 +42,47 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     },
   };
 }
+// Komponen Schema untuk diletakkan di dalam atau di atas return utama
+const ProductSchema = ({ product }: { product: any }) => {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.name,
+    "description": product.description || `Cek harga terbaik untuk ${product.name}`,
+    "image": product.images && product.images.length > 0 ? product.images : ["/placeholder.jpg"],
+    "brand": {
+      "@type": "Brand",
+      "name": "Jagopilih" // Sesuaikan dengan nama brand/situs Anda
+    },
+    "offers": {
+      "@type": "AggregateOffer",
+      "priceCurrency": "IDR",
+      "lowPrice": product.minPrice || 0,
+      "highPrice": product.maxPrice || 0,
+      "offerCount": product.links?.length || 0,
+      "offers": product.links?.map((link: any) => ({
+        "@type": "Offer",
+        "url": link.affiliateUrl || link.originalUrl,
+        "price": link.currentPrice,
+        "priceCurrency": "IDR",
+        "seller": {
+          "@type": "Organization",
+          "name": link.storeName
+        },
+        "availability": link.isStockReady 
+          ? "https://schema.org/InStock" 
+          : "https://schema.org/OutOfStock"
+      }))
+    }
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+};
 
 // --- 2. Main Page Component ---
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -142,6 +183,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   return (
     // ✅ UPDATE POINT 1 & 2: Tambah padding-top (pt-28) untuk navbar fix, 
     // relative & overflow-hidden untuk background pattern.
+    <>
+    <ProductSchema product={product} />
     <div className="min-h-screen bg-[#FDFCF8] font-sans pb-24 relative pt-28">
       
       {/* ✅ UPDATE POINT 2: Background Motif Pattern (Sama seperti Hero.tsx) */}
@@ -373,5 +416,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       </div>
       <FloatingCTA bestDeal={bestDealData} />
     </div>
+    </>
   );
 }
