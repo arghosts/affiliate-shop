@@ -113,7 +113,7 @@ export default function ProductFormShared({ categories, tags, action, initialDat
         </div>
       </div>
 
-      {/* BAGIAN 2: LINKS & HARGA (DENGAN AFFILIATE URL) */}
+      {/* BAGIAN LINKS */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-bold text-lg text-coffee flex items-center gap-2">
@@ -125,24 +125,17 @@ export default function ProductFormShared({ categories, tags, action, initialDat
           </button>
         </div>
 
-        {links.length === 0 && (
-          <div className="text-center py-8 text-gray-400 text-sm border border-dashed rounded-xl">
-            Belum ada toko. Tambahkan minimal satu.
-          </div>
-        )}
-
         <div className="space-y-4">
           {links.map((link, index) => (
-            <div key={index} className={`p-5 border rounded-2xl space-y-4 relative group transition-all ${!link.isStockReady ? 'bg-gray-100 border-gray-200 opacity-75' : 'bg-white border-gray-200 shadow-sm'}`}>
+            <div key={index} className={`p-5 border rounded-2xl space-y-4 relative group transition-all ${!link.isStockReady ? 'bg-gray-50 border-gray-200' : 'bg-white border-blue-100'}`}>
               
-              {/* Tombol Hapus */}
               <button type="button" onClick={() => removeLink(index)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 z-10">
                 <Trash2 className="w-4 h-4" />
               </button>
 
-              {/* Baris 1: Info Dasar */}
+              {/* ... INPUT LAINNYA TETAP SAMA ... */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pr-8">
-                <div className="space-y-1">
+                 <div className="space-y-1">
                    <label className="text-[10px] uppercase font-bold text-gray-400">Platform</label>
                    <select 
                       value={link.marketplace}
@@ -156,67 +149,43 @@ export default function ProductFormShared({ categories, tags, action, initialDat
                       <option value="WEBSITE_RESMI">Web Resmi</option>
                    </select>
                 </div>
-                <div className="space-y-1">
-                   <label className="text-[10px] uppercase font-bold text-gray-400">Nama Toko & Lokasi</label>
-                   <div className="flex gap-2">
-                     <input 
-                        value={link.storeName}
-                        onChange={(e) => updateLink(index, "storeName", e.target.value)}
-                        className="w-full p-2 rounded-lg border border-gray-300 text-sm"
-                        placeholder="Nama Toko"
-                     />
-                     <input 
-                        value={link.region}
-                        onChange={(e) => updateLink(index, "region", e.target.value)}
-                        className="w-1/3 p-2 rounded-lg border border-yellow-200 bg-yellow-50 text-sm placeholder:text-yellow-400"
-                        placeholder="Kota"
-                        title="Isi jika toko lokal (ex: Bojonegoro)"
-                     />
-                   </div>
+                {/* ... Store Name & Price ... */}
+                 <div className="space-y-1">
+                   <label className="text-[10px] uppercase font-bold text-gray-400">Nama Toko</label>
+                   <input 
+                      value={link.storeName}
+                      onChange={(e) => updateLink(index, "storeName", e.target.value)}
+                      className="w-full p-2 rounded-lg border border-gray-300 text-sm"
+                   />
                 </div>
-                <div className="space-y-1">
-                   <label className="text-[10px] uppercase font-bold text-gray-400">Harga (IDR)</label>
-                   <div className="relative">
-                     <DollarSign className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-green-600"/>
-                     <input 
-                        type="number"
-                        value={link.currentPrice || ""}
-                        onChange={(e) => updateLink(index, "currentPrice", Number(e.target.value))}
-                        className="w-full pl-7 p-2 rounded-lg border border-gray-300 text-sm font-bold text-green-700 font-mono"
-                     />
-                   </div>
+                 <div className="space-y-1">
+                   <label className="text-[10px] uppercase font-bold text-gray-400">Harga</label>
+                   <input 
+                      type="number"
+                      value={link.currentPrice || ""}
+                      onChange={(e) => updateLink(index, "currentPrice", Number(e.target.value))}
+                      className="w-full p-2 rounded-lg border border-gray-300 text-sm"
+                   />
                 </div>
               </div>
 
-              {/* Baris 2: URL Section (Original vs Affiliate) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-3 rounded-xl border border-gray-100">
-                <div className="space-y-1">
-                   <label className="text-[10px] uppercase font-bold text-gray-400 flex items-center gap-1">
-                      <LinkIcon className="w-3 h-3" /> Original URL (Untuk Scraping)
-                   </label>
-                   <input 
-                      type="url"
-                      value={link.originalUrl}
-                      onChange={(e) => updateLink(index, "originalUrl", e.target.value)}
-                      className="w-full p-2 rounded-lg border border-gray-200 text-xs text-gray-600 bg-gray-50"
-                      placeholder="https://shopee.co.id/product/..."
-                   />
-                </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 {/* ... URL Inputs ... */}
+                 <input 
+                    placeholder="Original URL"
+                    value={link.originalUrl}
+                    onChange={(e) => updateLink(index, "originalUrl", e.target.value)}
+                    className="w-full p-2 rounded-lg border border-gray-200 text-xs"
+                 />
+                 <input 
+                    placeholder="Affiliate URL"
+                    value={link.affiliateUrl}
+                    onChange={(e) => updateLink(index, "affiliateUrl", e.target.value)}
+                    className="w-full p-2 rounded-lg border border-gray-200 text-xs"
+                 />
+              </div>
 
-                <div className="space-y-1">
-                   <label className="text-[10px] uppercase font-bold text-gold-accent flex items-center gap-1">
-                      <LinkIcon className="w-3 h-3" /> Affiliate URL (Untuk Cuan) ✅
-                   </label>
-                   <input 
-                      type="url"
-                      value={link.affiliateUrl}
-                      onChange={(e) => updateLink(index, "affiliateUrl", e.target.value)}
-                      className="w-full p-2 rounded-lg border border-gold-accent/30 text-xs text-coffee bg-gold-accent/5 focus:bg-white transition-all placeholder:text-gold-accent/40"
-                      placeholder="https://s.shopee.co.id/..."
-                   />
-                </div>
-
-                              {/* ✅ BARIS 3: STATUS & VERIFIKASI (BARU) */}
+              {/* ✅ BAGIAN CHECKBOX (BOOLEAN) */}
               <div className="flex items-center gap-6 pt-2 border-t border-gray-100">
                 
                 {/* Toggle Verified */}
@@ -224,7 +193,9 @@ export default function ProductFormShared({ categories, tags, action, initialDat
                   <div className="relative">
                     <input 
                       type="checkbox" 
+                      // Pastikan checked menerima boolean dari state
                       checked={link.isVerified}
+                      // Pastikan onChange mengirim boolean (e.target.checked)
                       onChange={(e) => updateLink(index, "isVerified", e.target.checked)}
                       className="sr-only peer"
                     />
@@ -232,7 +203,7 @@ export default function ProductFormShared({ categories, tags, action, initialDat
                   </div>
                   <span className={`text-xs font-bold flex items-center gap-1 ${link.isVerified ? 'text-blue-600' : 'text-gray-400'}`}>
                     <BadgeCheck className="w-3 h-3" /> 
-                    {link.isVerified ? "Toko Terverifikasi" : "Belum Verifikasi"}
+                    Verified
                   </span>
                 </label>
 
@@ -249,11 +220,10 @@ export default function ProductFormShared({ categories, tags, action, initialDat
                   </div>
                   <span className={`text-xs font-bold flex items-center gap-1 ${link.isStockReady ? 'text-green-600' : 'text-gray-400'}`}>
                     <Box className="w-3 h-3" /> 
-                    {link.isStockReady ? "Stok Ready" : "Stok Habis"}
+                    {link.isStockReady ? "Ready Stock" : "Habis"}
                   </span>
                 </label>
 
-              </div>
               </div>
 
             </div>

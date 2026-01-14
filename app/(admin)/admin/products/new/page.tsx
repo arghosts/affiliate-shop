@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import ProductFormShared from "../product-form-shared"; 
 // 👇 PERBAIKAN: Ganti 'createProductAction' menjadi 'createProduct'
-import { createProduct } from "./actions";       
+import { createProduct } from "./../actions";       
 
 export const dynamic = "force-dynamic";
 

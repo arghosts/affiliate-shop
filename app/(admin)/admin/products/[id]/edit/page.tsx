@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import ProductFormShared from "../../product-form-shared"; 
-import { updateProductWithId } from "./actions"; // Pastikan nama export sesuai di actions.ts
+import { updateProductWithId } from "./../../actions"; // Pastikan nama export sesuai di actions.ts
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
