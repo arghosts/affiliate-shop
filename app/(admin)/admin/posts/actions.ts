@@ -23,8 +23,7 @@ const postSchema = z.object({
   content: z.string().min(2, "Konten tidak boleh kosong"),
   // Thumbnail any karena bisa File atau String url
   thumbnail: z.any().optional(),
-  shopeeLink: z.string().trim().optional().or(z.literal("")),
-  tokpedLink: z.string().trim().optional().or(z.literal("")),
+  referenceLink: z.string().optional().or(z.literal("")),
 });
 
 // --- HELPER LOGIC UPLOAD DI ACTION ---
@@ -54,14 +53,16 @@ export async function createPost(id: string | null, prevState: any, formData: Fo
     slug: formData.get("slug"),
     content: formData.get("content"),
     thumbnail: formData.get("thumbnail"),
-    shopeeLink: formData.get("shopeeLink"),
-    tokpedLink: formData.get("tokpedLink"),
+    referenceLink: formData.get("referenceLink"),
   };
 
   const result = postSchema.safeParse(rawData);
   if (!result.success) {
     return { status: "error", message: result.error.issues[0].message };
   }
+
+  const validated = postSchema.safeParse(rawData);
+  if (!validated.success) return { status: "error", message: validated.error.issues[0].message };
 
   const { title, slug, content, thumbnail } = result.data;
 
@@ -86,13 +87,13 @@ export async function createPost(id: string | null, prevState: any, formData: Fo
   try {
     await prisma.post.create({
       data: {
-        title,
+        title: validated.data.title,
         slug: finalSlug,
-        // 👇 PENTING: Pakai 'as any' biar Prisma gak error tipe data
-        content: contentJson as any, 
-        thumbnail: finalThumbnailUrl,
-        shopeeLink: rawData.shopeeLink ? String(rawData.shopeeLink) : null,
-        tokpedLink: rawData.tokpedLink ? String(rawData.tokpedLink) : null,
+        content: contentJson,
+        thumbnail: finalThumbnailUrl, // hasil upload
+        
+        // ✅ SIMPAN LINK KE PRODUK DI SINI
+        referenceLink: validated.data.referenceLink || null,
       },
     });
     revalidatePath("/blog");
@@ -112,10 +113,9 @@ export async function updatePost(id: string | null, prevState: any, formData: Fo
     slug: formData.get("slug"),
     content: formData.get("content"),
     thumbnail: formData.get("thumbnail"),
-    shopeeLink: formData.get("shopeeLink"),
-    tokpedLink: formData.get("tokpedLink"),
+    referenceLink: formData.get("referenceLink"),
   };
-
+  
   const result = postSchema.safeParse(rawData);
   if (!result.success) return { status: "error", message: result.error.issues[0].message };
 
@@ -143,13 +143,13 @@ export async function updatePost(id: string | null, prevState: any, formData: Fo
     await prisma.post.update({
       where: { id },
       data: {
-        title,
+        title: result.data.title,
         slug: finalSlug,
-        // 👇 PENTING: Pakai 'as any'
-        content: contentJson as any,
-        thumbnail: finalThumbnailUrl,
-        shopeeLink: rawData.shopeeLink ? String(rawData.shopeeLink) : null,
-        tokpedLink: rawData.tokpedLink ? String(rawData.tokpedLink) : null,
+        content: contentJson,
+        thumbnail: finalThumbnailUrl, // hasil upload
+        
+        // ✅ SIMPAN LINK KE PRODUK DI SINI
+        referenceLink: result.data.referenceLink || null,
       },
     });
     revalidatePath("/blog");

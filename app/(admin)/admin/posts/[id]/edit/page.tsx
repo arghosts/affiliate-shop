@@ -11,12 +11,17 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
   });
 
   if (!post) notFound();
+  const products = await prisma.product.findMany({
+    select: { id: true, name: true, slug: true },
+    orderBy: { createdAt: 'desc' }
+  });
 
   return (
     <div className="pb-20 pt-6 px-6">
       {/* Kita kirim updatePost mentah-mentah, nanti PostForm yang ngatur cara panggilnya */}
       <PostForm 
-        action={updatePost} 
+        action={updatePost}
+        products={products}
         initialData={post} 
       />
     </div>

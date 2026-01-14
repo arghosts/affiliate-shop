@@ -114,20 +114,7 @@ export default async function BlogIndexPage() {
                 <div className="mt-auto space-y-4">
                   
                   {/* Tombol Affiliate (Link Eksternal) - AMAN karena di luar Link Artikel */}
-                  {(post.shopeeLink || post.tokpedLink) && (
-                     <div className="flex gap-2">
-                        {post.shopeeLink && (
-                          <a href={post.shopeeLink} target="_blank" rel="noreferrer" className="flex-1 bg-orange-50 text-orange-600 text-xs font-bold py-2 px-3 rounded-lg text-center hover:bg-orange-100 transition-colors">
-                            Shopee
-                          </a>
-                        )}
-                        {post.tokpedLink && (
-                          <a href={post.tokpedLink} target="_blank" rel="noreferrer" className="flex-1 bg-green-50 text-green-600 text-xs font-bold py-2 px-3 rounded-lg text-center hover:bg-green-100 transition-colors">
-                            Tokopedia
-                          </a>
-                        )}
-                     </div>
-                  )}
+                  
 
                   {/* 4. Link "Baca Selengkapnya" */}
                   <Link href={`/blog/${post.slug}`} className="flex items-center text-sm font-bold text-coffee group-hover:text-gold-accent gap-2 transition-colors">

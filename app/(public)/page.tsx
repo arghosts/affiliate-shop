@@ -38,14 +38,17 @@ export default async function HomePage({
     whereCondition.tags = { some: { slug: tagFilter } };
   }
 
-  // 2. Fetch Products dengan Filter
+  // 3. Fetch Products dengan Schema Baru
   const products = await prisma.product.findMany({
     where: whereCondition,
-    take: 12, // Tampilkan lebih banyak biar enak dilihat
+    take: 12, // Batasi 12 produk di halaman depan
     orderBy: { createdAt: "desc" },
     include: {
-      category: true, 
-      tags: true
+      category: true,
+      // ✅ Hitung jumlah toko (links) untuk ditampilkan di card "2 Toko"
+      _count: {
+        select: { links: true }
+      }
     },
   });
 
@@ -169,11 +172,11 @@ export default async function HomePage({
                       id: product.id,
                       name: product.name,
                       slug: product.slug,
-                      price: Number(product.price),
+                      // ✅ UPDATE: Gunakan minPrice & storeCount (bukan price/shopeeLink lagi)
+                      minPrice: product.minPrice ? Number(product.minPrice) : 0,
                       category: product.category?.name || "Uncategorized", 
-                      image: product.images[0] || "/file.svg", 
-                      shopeeLink: product.shopeeLink,
-                      tokpedLink: product.tokpedLink
+                      image: product.images[0] || "/placeholder.jpg",
+                      storeCount: product._count.links 
                     }}
                   />
                 ))}

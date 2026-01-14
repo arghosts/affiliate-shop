@@ -4,19 +4,29 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import FormImageUpload from "@/components/FormImageUpload";
+import ProductPicker from "@/components/ProductPicker"; // Import komponen tadi
 
 // Import Editor Lazy Load
 const Editor = dynamic(() => import("@/components/Editor"), { ssr: false });
 
+// Definisi tipe data sederhana untuk produk
+interface SimpleProduct {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface PostFormProps {
   initialData?: any; 
   // Action signature yang kita harapkan
-  action: (id: string | null, prevState: any, formData: FormData) => Promise<any>; 
+  action: (id: string | null, prevState: any, formData: FormData) => Promise<any>;
+  products: SimpleProduct[];
 }
 
-export default function PostForm({ initialData, action }: PostFormProps) {
+export default function PostForm({ initialData, action, products }: PostFormProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  
   
   // State Content
   const [contentJson, setContentJson] = useState<any>(
@@ -104,30 +114,6 @@ export default function PostForm({ initialData, action }: PostFormProps) {
           defaultValue={initialData?.thumbnail} 
         />
 
-        {/* SECTION LINK AFFILIATE */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Link Shopee (Opsional)</label>
-            <input
-              name="shopeeLink"
-              type="url"
-              defaultValue={initialData?.shopeeLink || ""}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-sm"
-              placeholder="https://shope.ee/..."
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Link Tokopedia (Opsional)</label>
-            <input
-              name="tokpedLink"
-              type="url"
-              defaultValue={initialData?.tokpedLink || ""}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-sm"
-              placeholder="https://tokopedia.link/..."
-            />
-          </div>
-        </div>
-
         {/* EDITOR */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">Konten</label>
@@ -139,6 +125,13 @@ export default function PostForm({ initialData, action }: PostFormProps) {
             />
           </div>
         </div>
+
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mt-6">
+                     <ProductPicker 
+                        products={products} 
+                        initialValue={initialData?.referenceLink} 
+                     />
+                </div>
 
         {/* Tombol Action */}
         <div className="flex justify-end pt-6 border-t border-gray-100 gap-4">

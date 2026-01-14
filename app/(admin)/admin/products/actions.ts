@@ -33,17 +33,16 @@ async function handleMultipleImageUpload(formData: FormData) {
 
 // Schema Validasi Link Toko
 const ProductLinkSchema = z.object({
-  // ✅ FIX: Ganti errorMap dengan invalid_type_error
-  marketplace: z.nativeEnum(MarketplaceType, {
-    error: "Tipe Marketplace tidak valid",
-  }),
+  marketplace: z.nativeEnum(MarketplaceType, { message: "Tipe Marketplace tidak valid" }).refine((v) => v !== undefined && v !== null, { message: "Marketplace wajib dipilih" }),
   storeName: z.string().min(1, "Nama toko wajib diisi"),
-  originalUrl: z.string().url("URL Original harus format URL valid (http/https)"),
-  // Affiliate URL: Boleh string kosong OR URL valid
+  originalUrl: z.string().url("URL Original harus format URL valid"),
   affiliateUrl: z.string().url("URL Affiliate tidak valid").optional().or(z.literal("")), 
   currentPrice: z.coerce.number().min(0, "Harga tidak boleh negatif"),
   region: z.string().optional().nullable(),
-  isVerified: z.coerce.boolean().optional(),
+  
+  // ✅ UPDATE: Validasi Boolean
+  isVerified: z.boolean().default(false),     
+  isStockReady: z.boolean().default(true),
 });
 
 // Schema Validasi Produk Utama
@@ -213,18 +212,19 @@ export async function updateProductWithId(id: string, prevState: any, formData: 
 
         // Update Links (Hapus Lama -> Buat Baru)
         links: {
-          deleteMany: {}, 
-          create: validData.links.map((link) => ({
-            marketplace: link.marketplace,
-            storeName: link.storeName,
-            originalUrl: link.originalUrl,
-            affiliateUrl: link.affiliateUrl || null,
-            currentPrice: link.currentPrice,
-            region: link.region || null,
-            isVerified: link.isVerified || false,
-            isStockReady: true
-          }))
-        }
+                create: validData.links.map((link) => ({
+                  marketplace: link.marketplace,
+                  storeName: link.storeName,
+                  originalUrl: link.originalUrl,
+                  affiliateUrl: link.affiliateUrl || null,
+                  currentPrice: link.currentPrice,
+                  region: link.region || null,
+                  
+                  // ✅ UPDATE: Ambil value dinamis dari form
+                  isVerified: link.isVerified, 
+                  isStockReady: link.isStockReady 
+                }))
+              }
       },
     });
 

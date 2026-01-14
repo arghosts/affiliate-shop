@@ -1,22 +1,19 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Calendar, User, ArrowRight } from "lucide-react"; // Import icon yang dipakai saja
+import { ChevronLeft, Calendar, User, ArrowRight, ShoppingBag } from "lucide-react"; 
 import { Metadata } from "next";
 import React from "react"; 
-import ShareWidget from "@/components/ShareWidget"; // Import komponen baru
+import ShareWidget from "@/components/ShareWidget"; 
 
-// --- HELPER 1: Render Block Editor.js ---
+// --- HELPER: Render Block Editor.js (SAMA SEPERTI SEBELUMNYA) ---
 const renderBlock = (block: any) => {
   switch (block.type) {
     case "header":
-      // Variable diganti 'HeadingTag' biar aman
       const HeadingTag = `h${block.data.level}` as React.ElementType;
-      
       const size = block.data.level === 2 
-        ? "text-2xl font-bold mt-8 mb-4 text-gray-900" 
+        ? "text-2xl font-bold mt-8 mb-4 text-coffee" 
         : "text-xl font-semibold mt-6 mb-3 text-gray-800";
-        
       return <HeadingTag key={block.id} className={size}>{block.data.text}</HeadingTag>;
 
     case "paragraph":
@@ -25,113 +22,30 @@ const renderBlock = (block: any) => {
           <span dangerouslySetInnerHTML={{ __html: block.data.text }} />
         </p>
       );
-      // 👇 TAMBAHAN UNTUK TABLE
-    case "table":
-      const tableData = block.data;
-      const rows = tableData.content || [];
-      const withHeadings = tableData.withHeadings; // Cek apakah baris pertama adalah header
-
-      // Pisahkan Header dan Body
-      const headerRow = withHeadings ? rows[0] : null;
-      const bodyRows = withHeadings ? rows.slice(1) : rows;
-
-      return (
-        <div key={block.id} className="overflow-x-auto my-8 rounded-xl border border-gray-200 shadow-sm">
-           <table className="w-full text-left border-collapse bg-white">
-              {/* Render HEAD jika withHeadings: true */}
-              {withHeadings && (
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    {headerRow.map((cell: string, idx: number) => (
-                      <th key={idx} className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">
-                        <span dangerouslySetInnerHTML={{ __html: cell }} />
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-              )}
-
-              {/* Render BODY */}
-              <tbody className="divide-y divide-gray-100">
-                {bodyRows.map((row: string[], rowIdx: number) => (
-                   <tr key={rowIdx} className="hover:bg-gray-50/50 transition-colors">
-                      {row.map((cell: string, cellIdx: number) => (
-                        <td key={cellIdx} className="px-6 py-4 text-sm text-gray-700 leading-relaxed border-r border-gray-100 last:border-r-0">
-                           {/* Cell bisa berisi HTML (bold/italic) dari editor */}
-                           <span dangerouslySetInnerHTML={{ __html: cell }} />
-                        </td>
-                      ))}
-                   </tr>
-                ))}
-              </tbody>
-           </table>
-        </div>
-      );
 
     case "list":
-    case "checklist":
-      const isOrdered = block.data.style === "ordered";
-      const ListTag = isOrdered ? "ol" : "ul";
-      const listStyle = isOrdered ? "list-decimal" : "list-disc";
-      
+      const ListTag = block.data.style === "ordered" ? "ol" : "ul";
       return (
-        <ListTag key={block.id} className={`${listStyle} list-inside mb-6 pl-4 space-y-2 text-gray-700 text-lg`}>
-          {block.data.items.map((item: any, i: number) => {
-            // 🔍 SYSTEMIZER CHECK: 
-            // If item is string -> use it directly
-            // If item is object -> extract 'content' or 'text' property
-            const content = typeof item === 'string' 
-              ? item 
-              : item.content || item.text || ""; 
-
-            return (
-              <li key={i} dangerouslySetInnerHTML={{ __html: content }} />
-            );
-          })}
+        <ListTag key={block.id} className="list-inside list-disc mb-4 space-y-1 text-gray-700 ml-4">
+          {block.data.items.map((item: string, i: number) => (
+            <li key={i} dangerouslySetInnerHTML={{ __html: item }} />
+          ))}
         </ListTag>
       );
-      // ✅ NEW: Menangani Gambar (Image Tool)
+      
     case "image":
       return (
         <figure key={block.id} className="my-8">
-          <div className="relative w-full rounded-xl overflow-hidden shadow-sm bg-gray-100 border border-gray-200">
-            {/* Menggunakan tag img standar agar kompatibel dengan berbagai sumber URL */}
-            <img 
-              src={block.data.file.url} 
-              alt={block.data.caption || "Gambar Artikel"} 
-              className="w-full h-auto object-cover"
-              loading="lazy"
-              sizes="(max-width: 768px) 100vw, 50vw"
-            />
-          </div>
-          {block.data.caption && (
-            <figcaption className="text-center text-sm text-gray-500 mt-2 italic">
-              {/* Render caption dengan HTML safe (untuk link source dsb) */}
-              <span dangerouslySetInnerHTML={{ __html: block.data.caption }} />
-            </figcaption>
-          )}
-        </figure>
-      );
-
-    // ✅ NEW: Menangani Embed (YouTube, Twitter, dll)
-    case "embed":
-      return (
-        <figure key={block.id} className="my-8 w-full flex flex-col items-center">
-          <div className="w-full relative pt-[56.25%] bg-gray-100 rounded-xl overflow-hidden shadow-sm border border-gray-200">
-             {/* Wrapper pt-[56.25%] membuat rasio 16:9 otomatis */}
-            <iframe
-              src={block.data.embed}
-              className="absolute top-0 left-0 w-full h-full"
-              allow="autoplay; encrypted-media; picture-in-picture"
-              allowFullScreen
-              title="Embedded content"
-            />
-          </div>
-          {block.data.caption && (
-            <figcaption className="text-center text-sm text-gray-500 mt-2 italic">
-              <span dangerouslySetInnerHTML={{ __html: block.data.caption }} />
-            </figcaption>
-          )}
+           <img 
+             src={block.data.file.url} 
+             alt={block.data.caption || "Blog Image"} 
+             className="w-full rounded-2xl shadow-sm border border-gray-100"
+           />
+           {block.data.caption && (
+             <figcaption className="text-center text-sm text-gray-500 mt-2 italic">
+               {block.data.caption}
+             </figcaption>
+           )}
         </figure>
       );
 
@@ -140,180 +54,166 @@ const renderBlock = (block: any) => {
   }
 };
 
-// --- HELPER 2: Extract Text for Metadata (SEO) ---
-const extractText = (content: any): string => {
-  if (!content) return "";
-  if (typeof content === 'string') return content.substring(0, 160);
-  
-  if (typeof content === 'object' && content.blocks) {
-    const firstPara = content.blocks.find((b: any) => b.type === 'paragraph');
-    return firstPara ? firstPara.data.text.substring(0, 160) : "";
-  }
-  return "";
-}
-
-// 1. Metadata SEO
+// --- METADATA ---
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
-  const post = await prisma.post.findUnique({ where: { slug } });
-  
+  const resolvedParams = await params;
+  const post = await prisma.post.findUnique({
+    where: { slug: resolvedParams.slug },
+    select: { title: true, thumbnail: true }
+  });
+
   if (!post) return { title: "Artikel Tidak Ditemukan" };
 
   return {
-    title: `${post.title} - Review JagoPilih`,
-    description: extractText(post.content ?? ""),
+    title: post.title,
+    openGraph: {
+      images: post.thumbnail ? [post.thumbnail] : [],
+    },
   };
 }
 
+// --- MAIN COMPONENT ---
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-
+  const resolvedParams = await params;
+  
   const post = await prisma.post.findUnique({
-    where: { slug },
+    where: { slug: resolvedParams.slug },
   });
 
   if (!post) notFound();
 
-  // Logic: Parsing Content
-  let contentBlocks: any[] = [];
-  let isLegacyText = false;
-
-  const rawContent = post.content as any; 
-
-  if (rawContent && typeof rawContent === 'object' && rawContent.blocks) {
-     contentBlocks = rawContent.blocks;
-  } else if (typeof rawContent === 'string') {
-     isLegacyText = true;
+  // Parsing JSON Content
+  let contentBlocks = [];
+  try {
+    const parsed = typeof post.content === 'string' ? JSON.parse(post.content) : post.content;
+    contentBlocks = parsed?.blocks || [];
+  } catch (e) {
+    console.error("Error parsing content:", e);
   }
 
-  const hasAffiliateLinks = post.shopeeLink || post.tokpedLink;
+  const date = new Date(post.createdAt).toLocaleDateString("id-ID", {
+    day: "numeric", month: "long", year: "numeric"
+  });
 
   return (
-    <div className="bg-gray-50 min-h-screen pt-28 pb-20">
+    
+    <div className="min-h-screen bg-[#FDFCF8] font-sans pb-24 pt-28">
+
+      {/* 2. TEXTURE NOISE (Efek Kertas Premium) */}
+      <div 
+        className="absolute inset-0 opacity-[0.03] z-0 pointer-events-none mix-blend-multiply"
+        style={{ 
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")` 
+        }}
+      />
+      {/* 3. BACKGROUND DECOR (Blobs & Grid) */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full z-0 pointer-events-none overflow-hidden">
+        {/* Blob Gold - Opacity dikurangi biar lebih soft */}
+        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-gold-accent/5 rounded-full blur-3xl opacity-60 mix-blend-multiply animate-blob" />
+        {/* Blob Coffee - Opacity dikurangi biar lebih soft */}
+        <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] bg-coffee/5 rounded-full blur-3xl opacity-50 mix-blend-multiply animate-blob animation-delay-2000" />
+        
+        {/* Grid Pattern Halus */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.03]" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="hero-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#hero-grid)" />
+        </svg>
+      </div>
       
-      {/* HEADER SECTION */}
-      <header className="container max-w-5xl mx-auto px-6 mb-12">
-        <Link 
-           href="/blog" 
-           className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-orange-600 mb-6 transition-colors"
-        >
-           <ChevronLeft className="w-4 h-4" /> Kembali ke Blog
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Breadcrumb */}
+        <Link href="/blog" className="inline-flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-coffee transition-colors mb-8">
+          <ChevronLeft className="w-4 h-4" /> Kembali ke Blog
         </Link>
 
-        <div className="text-center max-w-3xl mx-auto">
-           <div className="flex items-center justify-center gap-4 text-xs font-semibold text-orange-600 uppercase tracking-wider mb-4">
-             <span className="flex items-center gap-1">
-               <Calendar className="w-3 h-3" /> 
-               {new Date(post.createdAt).toLocaleDateString("id-ID", { dateStyle: 'long' })}
-             </span>
-             <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-             <span className="flex items-center gap-1">
-               <User className="w-3 h-3" /> Admin
-             </span>
-           </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          
+          {/* KOLOM KIRI: KONTEN ARTIKEL */}
+          <article className="lg:col-span-8">
+            <div className="mb-8">
+               <h1 className="text-3xl sm:text-4xl font-black text-coffee leading-tight mb-4">
+                 {post.title}
+               </h1>
+               <div className="flex items-center gap-6 text-sm text-gray-500">
+                  <span className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gold-accent" /> {date}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-gold-accent" /> Admin
+                  </span>
+               </div>
+            </div>
 
-           <h1 className="text-3xl md:text-5xl font-black text-gray-900 leading-tight mb-8">
-             {post.title}
-           </h1>
-        </div>
-
-        {post.thumbnail && (
-          <div className="aspect-video w-full relative rounded-3xl overflow-hidden shadow-xl bg-gray-200">
-            <img 
-              src={post.thumbnail} 
-              alt={post.title}
-              className="w-full h-full object-cover"
-              sizes="(max-width: 768px) 100vw, 50vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-          </div>
-        )}
-      </header>
-
-
-      {/* MAIN CONTENT + SIDEBAR LAYOUT */}
-      <div className="container max-w-5xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12">
-        
-        {/* KOLOM KIRI: ARTIKEL */}
-        <main className="lg:col-span-8">
-          <div className="bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-gray-100 min-h-[400px]">
-             
-             {/* Kotak Ringkasan */}
-             <div className="bg-orange-50 border-l-4 border-orange-500 p-6 rounded-r-xl mb-8">
-                <h3 className="font-bold text-orange-800 text-lg mb-2">💡 Ringkasan Cepat</h3>
-                <p className="text-orange-900/80 text-sm leading-relaxed">
-                  Artikel ini membahas detail tentang {post.title}. Cocok untuk kamu yang sedang mencari referensi sebelum membeli.
-                </p>
-             </div>
-
-             {/* Content Body */}
-             <article className="prose prose-lg prose-gray max-w-none prose-img:rounded-xl prose-img:shadow-md">
-                {isLegacyText ? (
-                   <div className="whitespace-pre-wrap font-serif text-gray-700">
-                      {String(rawContent)}
-                   </div>
-                ) : (
-                   <div className="font-serif [&_a]:text-orange-600 [&_a]:underline hover:[&_a]:text-orange-800 [&_a]:font-bold">
-                      {contentBlocks.map((block: any) => renderBlock(block))}
-                      
-                      {contentBlocks.length === 0 && (
-                        <p className="text-gray-400 italic text-center py-10">
-                          Konten sedang disiapkan.
-                        </p>
-                      )}
-                   </div>
-                )}
-             </article>
-
-          </div>
-        </main>
-
-
-        {/* KOLOM KANAN: SIDEBAR */}
-        <aside className="lg:col-span-4 space-y-8">
-          <div className="sticky top-28 space-y-6">
-            
-            {/* CTA Box (Penting untuk Affiliate: Tetap Disimpan) */}
-            {/* 👇 Tampilkan Kotak CTA HANYA JIKA ada linknya */}
-            {hasAffiliateLinks && (
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center">
-                 <h4 className="font-bold text-gray-900 mb-2">Tertarik Produk Ini?</h4>
-                 <p className="text-sm text-gray-500 mb-4">Cek harga terbaru di marketplace.</p>
-                 
-                 <div className="space-y-3">
-                   {/* Tombol Shopee (Muncul jika ada link) */}
-                   {post.shopeeLink && (
-                     <a 
-                       href={post.shopeeLink}
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       className="w-full flex items-center justify-center gap-2 bg-orange-500 text-white font-bold py-3 rounded-xl hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20"
-                     >
-                       Beli di Shopee <ArrowRight size={16}/>
-                     </a>
-                   )}
-
-                   {/* Tombol Tokopedia (Muncul jika ada link) */}
-                   {post.tokpedLink && (
-                     <a 
-                       href={post.tokpedLink}
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       className="w-full flex items-center justify-center gap-2 bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-600/20"
-                     >
-                       Beli di Tokopedia <ArrowRight size={16}/>
-                     </a>
-                   )}
-                 </div>
+            {post.thumbnail && (
+              <div className="relative aspect-video w-full overflow-hidden rounded-2xl mb-10 shadow-sm border border-gray-100">
+                <img src={post.thumbnail} alt={post.title} className="object-cover w-full h-full" />
               </div>
             )}
 
-            {/* Share Widget (Pengganti Tags & Tombol Share Lama) */}
-            <ShareWidget title={post.title} slug={post.slug} />
+            <div className="prose prose-lg prose-stone max-w-none">
+              {contentBlocks.map((block: any) => renderBlock(block))}
+            </div>
+            
+            {/* CTA Mobile (Tetap ada di bawah artikel) */}
+            {post.referenceLink && (
+               <div className="mt-12 p-6 bg-gradient-to-r from-coffee to-gray-800 rounded-2xl text-white shadow-xl lg:hidden">
+                  <h3 className="font-bold text-xl mb-2 flex items-center gap-2">
+                    <ShoppingBag className="w-5 h-5 text-gold-accent" /> Tertarik Produk Ini?
+                  </h3>
+                  <p className="text-white/80 mb-6 text-sm">
+                    Cek spesifikasi lengkap, perbandingan harga termurah, dan toko terpercaya.
+                  </p>
+                  <Link 
+                    href={post.referenceLink}
+                    className="block w-full text-center bg-gold-accent text-white font-bold py-3.5 rounded-xl hover:bg-white hover:text-coffee transition-all"
+                  >
+                    Cek Harga Terbaru
+                  </Link>
+               </div>
+            )}
+          </article>
 
-          </div>
-        </aside>
+          {/* KOLOM KANAN: SIDEBAR */}
+          <aside className="lg:col-span-4">
+            
+            {/* ✅ WRAPPER STICKY: Membungkus Rekomendasi & Share */}
+            {/* 'lg:sticky' agar hanya lengket di desktop, 'top-28' untuk jarak dari atas */}
+            <div className="space-y-8 lg:sticky lg:top-28">
+              
+              {/* CTA Desktop */}
+              {post.referenceLink && (
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hidden lg:block">
+                   <div className="mb-4">
+                      <span className="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider rounded-full">
+                        Rekomendasi
+                      </span>
+                   </div>
+                   <h3 className="font-bold text-coffee text-xl mb-2">Produk Terkait</h3>
+                   <p className="text-sm text-gray-500 mb-6">
+                     Artikel ini membahas produk yang tersedia di katalog kami. Cek harga terbaik sekarang.
+                   </p>
+                   
+                   <Link 
+                     href={post.referenceLink}
+                     className="w-full flex items-center justify-center gap-2 bg-gold-accent text-white font-bold py-3 rounded-xl hover:bg-coffee transition-all shadow-lg shadow-gold-accent/20 group"
+                   >
+                     Cek Harga & Toko <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform"/>
+                   </Link>
+                </div>
+              )}
 
+              {/* Share Widget (Ikut sticky karena di dalam wrapper ini) */}
+              <ShareWidget title={post.title} slug={post.slug} />
+
+            </div>
+          </aside>
+
+        </div>
       </div>
     </div>
   );

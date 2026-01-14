@@ -1,13 +1,24 @@
 import { createPost } from "../actions";
 import PostForm from "../post-form"; // Import komponen shared
+import { prisma } from "@/lib/prisma";
 
-export default function NewPostPage() {
+export default async function NewPostPage() {
+  
+  // Fetch data produk untuk dropdown picker
+  const products = await prisma.product.findMany({
+    select: { id: true, name: true, slug: true },
+    orderBy: { createdAt: 'desc' }
+  });
+
   return (
     <div className="pb-20 pt-6 px-6">
-       {/* Kita panggil PostForm dengan action 'createPost'.
-          Tidak perlu initialData karena ini buat artikel baru.
-       */}
-       <PostForm action={createPost} />
+       <h1 className="text-2xl font-bold mb-6 text-gray-800">Tulis Artikel Baru</h1>
+       
+       <PostForm 
+         action={createPost} 
+         products={products} // Kirim data produk ke Client Component
+         initialData={null}
+       />
     </div>
   );
 }

@@ -3,17 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ExternalLink } from "lucide-react";
+import { Store, MapPin } from "lucide-react"; // Icon tambahan
 
 interface ProductProps {
   id: string;
   name: string;
   slug: string;
-  price: string | number;
+  minPrice: number; // ✅ Ganti price jadi minPrice
   image: string;
   category: string;
-  shopeeLink?: string | null;
-  tokpedLink?: string | null;
+  storeCount?: number; // ✅ Info jumlah toko
 }
 
 export default function ProductCard({ product }: { product: ProductProps }) {
@@ -22,102 +21,61 @@ export default function ProductCard({ product }: { product: ProductProps }) {
     currency: "IDR",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(Number(product.price));
+  }).format(product.minPrice || 0);
 
   return (
     <motion.div
       whileHover={{ y: -5 }}
-      // Tambahkan 'relative' dan 'group' untuk positioning
       className="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-white border border-surface shadow-sm hover:shadow-xl transition-all duration-300 h-full"
     >
-      
-      {/* --- 1. LINK UTAMA (OVERLAY) --- */}
-      {/* Link ini menutupi seluruh kartu (absolute inset-0) */}
-      {/* z-10 agar di atas konten biasa, tapi di bawah tombol Shopee (z-20) */}
-      <Link 
-        href={`/product/${product.slug}`} 
-        className="absolute inset-0 z-10"
-        aria-label={`Lihat detail ${product.name}`}
-      >
-        <span className="sr-only">Lihat Detail</span>
+      {/* 1. LINK FULL CARD (Klik di mana saja lari ke detail) */}
+      <Link href={`/product/${product.slug}`} className="absolute inset-0 z-10">
+        <span className="sr-only">Lihat detail {product.name}</span>
       </Link>
 
-      {/* --- IMAGE SECTION --- */}
-      <div className="relative aspect-square w-full overflow-hidden bg-surface">
+      {/* 2. GAMBAR */}
+      <div className="relative aspect-square w-full overflow-hidden bg-gray-100">
         <Image
-          src={product.image}
+          src={product.image || "/placeholder.jpg"}
           alt={product.name}
           fill
-          className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-          
-          // --- 2. OPTIMASI SPEED INSIGHTS (MOBILE SCORE) ---
-          // Ini memberi tahu browser: 
-          // "Di HP (max-width 640px), ambil gambar lebar penuh (100vw).
-          //  Di Tablet (max-width 1024px), ambil setengah lebar (50vw).
-          //  Di Laptop, ambil sepertiga lebar (33vw)."
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          
-          loading="lazy" // Pastikan lazy load aktif
+          className="object-cover transition-transform duration-500 group-hover:scale-110"
+          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
         />
-        
         {/* Badge Kategori */}
-        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-coffee border border-surface shadow-sm z-10">
-          {product.category}
+        <div className="absolute top-3 left-3 z-20">
+          <span className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white bg-coffee/90 backdrop-blur-sm rounded-full shadow-sm">
+            {product.category}
+          </span>
         </div>
       </div>
 
-      {/* --- CONTENT SECTION --- */}
-      <div className="p-5 flex flex-col flex-grow">
-        <div className="mb-4">
-          <h3 className="font-bold text-coffee text-base leading-snug line-clamp-2 mb-2 group-hover:text-gold-accent transition-colors">
-            {product.name}
-          </h3>
-          <p className="text-gold-accent font-black text-lg">
-            {formattedPrice}
-          </p>
-        </div>
+      {/* 3. KONTEN */}
+      <div className="flex flex-col flex-grow p-4">
+        {/* Judul */}
+        <h3 className="mb-2 text-2xl font-bold text-coffee line-clamp-2 group-hover:text-gold-accent transition-colors">
+          {product.name}
+        </h3>
 
-        {/* --- ACTION BUTTONS --- */}
-        {/* Tambahkan 'relative z-20' agar tombol ini berada DI ATAS Link Overlay */}
-        {/* Jadi kalau klik tombol Shopee -> ke Shopee. Klik area lain -> ke Detail Produk. */}
-        <div className="mt-auto grid grid-cols-2 gap-2 relative z-20">
-          
-          {/* Tombol Shopee */}
-          {product.shopeeLink ? (
-            <a
-              href={product.shopeeLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 px-3 py-2.5 text-[10px] sm:text-xs font-bold text-white bg-[#EE4D2D] rounded-lg hover:bg-[#d03e1f] transition-colors shadow-sm"
-            >
-              Shopee <ExternalLink className="w-3 h-3" />
-            </a>
-          ) : (
-             <button disabled className="px-3 py-2.5 text-[10px] sm:text-xs font-bold text-muted-brown bg-surface rounded-lg cursor-not-allowed border border-coffee/10">
-                Habis
-             </button>
-          )}
+        {/* Harga & Info Toko */}
+        <div className="mt-auto space-y-2">
+          <div>
+            <p className="text-[10px] text-gray-400 font-medium">Mulai dari</p>
+            <p className="text-lg font-black text-gold-accent">
+              {formattedPrice}
+            </p>
+          </div>
 
-          {/* Tombol Tokopedia */}
-          {product.tokpedLink ? (
-            <a
-              href={product.tokpedLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 px-3 py-2.5 text-[10px] sm:text-xs font-bold text-white bg-[#42B549] rounded-lg hover:bg-[#36963c] transition-colors shadow-sm"
-            >
-              Tokopedia <ExternalLink className="w-3 h-3" />
-            </a>
-          ) : (
-            // Jika tidak ada link Tokped, tombol ini jadi shortcut ke Detail
-            // Kita pakai <a> atau <button> palsu karena Link sudah ada di overlay
-            <div 
-              className="flex items-center justify-center gap-2 px-3 py-2.5 text-[10px] sm:text-xs font-bold text-coffee bg-white border border-coffee/10 rounded-lg hover:bg-surface transition-colors cursor-pointer"
-            >
-              Detail <ExternalLink className="w-3 h-3" />
+          {/* Footer Card: Info Jumlah Toko */}
+          <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+            <div className="flex items-center gap-1.5">
+              <Store className="w-3.5 h-3.5 text-gray-400" />
+              <span>{product.storeCount ? `${product.storeCount} Toko` : "Cek Stok"}</span>
             </div>
-          )}
-          
+            <span className="text-gold-accent font-bold text-[10px] uppercase tracking-wider group-hover:underline">
+              Cek Harga →
+            </span>
+          </div>
         </div>
       </div>
     </motion.div>
