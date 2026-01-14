@@ -2,31 +2,23 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { uploadImage } from "@/lib/imagekit";
 import { MarketplaceType } from "@prisma/client";
 
+// --- 1. HELPER UPLOAD IMAGE ---
 async function handleMultipleImageUpload(formData: FormData) {
-  const files = formData.getAll("images") as File[]; 
+  const files = formData.getAll("images") as File[];
   const existingUrls = formData.getAll("existing_images") as string[];
-
   const newUrls: string[] = [];
-  
+
   await Promise.all(
     files.map(async (file) => {
       if (file instanceof File && file.size > 0 && file.type.startsWith("image/")) {
         try {
-          // ❌ HAPUS KODE LAMA: 
-          // const res = await uploadImage(file);
-          // if (res.success) newUrls.push(res.url!);
-
-          // ✅ KODE BARU:
-          // uploadImage mengembalikan string URL langsung.
-          const url = await uploadImage(file); 
-          
-          if (url) {
-            newUrls.push(url);
-          }
+          const url = await uploadImage(file);
+          if (url) newUrls.push(url);
         } catch (err) {
           console.error("Gagal upload gambar:", file.name, err);
         }
@@ -37,123 +29,229 @@ async function handleMultipleImageUpload(formData: FormData) {
   return [...existingUrls, ...newUrls];
 }
 
-// Schema Validasi Sederhana
-const productSchema = z.object({
-  name: z.string().min(2),
-  slug: z.string().min(2),
-  categoryId: z.string().optional(),
-  description: z.string().optional(),
-  pros: z.string().optional(),
-  cons: z.string().optional(),
+// --- 2. DEFINISI SCHEMA ZOD (DIPERBAIKI) ---
+
+// Schema Validasi Link Toko
+const ProductLinkSchema = z.object({
+  // ✅ FIX: Ganti errorMap dengan invalid_type_error
+  marketplace: z.nativeEnum(MarketplaceType, {
+    error: "Tipe Marketplace tidak valid",
+  }),
+  storeName: z.string().min(1, "Nama toko wajib diisi"),
+  originalUrl: z.string().url("URL Original harus format URL valid (http/https)"),
+  // Affiliate URL: Boleh string kosong OR URL valid
+  affiliateUrl: z.string().url("URL Affiliate tidak valid").optional().or(z.literal("")), 
+  currentPrice: z.coerce.number().min(0, "Harga tidak boleh negatif"),
+  region: z.string().optional().nullable(),
+  isVerified: z.coerce.boolean().optional(),
 });
 
-// ✅ FUNGSI UPDATE PRODUK (REVISED)
-export async function updateProduct(
-  prevState: any, 
-  formData: FormData
-) {
-  const id = formData.get("id") as string;
-  if (!id) return { status: "error", message: "ID Produk hilang." };
+// Schema Validasi Produk Utama
+const ProductSchema = z.object({
+  name: z.string().min(3, "Nama produk minimal 3 karakter"),
+  slug: z.string().min(3, "Slug minimal 3 karakter").regex(/^[a-z0-9-]+$/, "Slug hanya boleh huruf kecil, angka, dan strip"),
+  description: z.string().optional(),
+  categoryId: z.string().uuid("ID Kategori tidak valid").optional().or(z.literal("")),
+  pros: z.string().optional(),
+  cons: z.string().optional(),
+  // Validasi Links sebagai array
+  links: z.array(ProductLinkSchema).optional().default([]),
+});
 
-  // Validasi field dasar
+// --- 3. FUNGSI CREATE PRODUCT ---
+export async function createProduct(prevState: any, formData: FormData) {
+  
+  // A. Parsing JSON Links
+  let parsedLinks = [];
+  try {
+    const linksJson = formData.get("linksJSON") as string;
+    if (linksJson) parsedLinks = JSON.parse(linksJson);
+  } catch (e) {
+    return { status: "error", message: "Format data Links rusak/tidak valid." };
+  }
+
+  // B. Siapkan Data Raw
   const rawData = {
     name: formData.get("name"),
-    slug: formData.get("slug"),
-    categoryId: formData.get("category"), // Perhatikan name field di form
+    slug: formData.get("slug") || undefined, 
     description: formData.get("description"),
+    categoryId: formData.get("category"), 
     pros: formData.get("pros"),
     cons: formData.get("cons"),
+    links: parsedLinks, 
   };
 
-  const validated = productSchema.safeParse(rawData);
+  // Auto-Slug jika kosong
+  if (!rawData.slug && typeof rawData.name === 'string') {
+     rawData.slug = rawData.name.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+  }
 
-  if (!validated.success) {
-    return { status: "error", message: "Data tidak valid: " + validated.error.issues[0].message };
+  // C. Validasi Zod
+  const validation = ProductSchema.safeParse(rawData);
+
+  if (!validation.success) {
+    const errorMessage = validation.error.issues[0].message;
+    return { status: "error", message: `Validasi Gagal: ${errorMessage}` };
+  }
+
+  const validData = validation.data;
+
+  // D. Hitung Min/Max Price
+  let minPrice = 0;
+  let maxPrice = 0;
+  if (validData.links.length > 0) {
+    const prices = validData.links.map((l) => l.currentPrice);
+    minPrice = Math.min(...prices);
+    maxPrice = Math.max(...prices);
   }
 
   try {
-    // 1. Handle Gambar
     const finalImages = await handleMultipleImageUpload(formData);
 
-    // 2. ✅ HANDLE LINKS & HARGA (LOGIKA BARU)
-    const linksJson = formData.get("linksJSON") as string;
-    let linksData: any[] = [];
-    
-    // Parsing JSON
-    if (linksJson) {
-      try {
-        linksData = JSON.parse(linksJson);
-      } catch (e) {
-        console.error("JSON Error", e);
-      }
-    }
-
-    // Hitung Min/Max Price Baru
-    let minPrice = 0;
-    let maxPrice = 0;
-
-    if (linksData.length > 0) {
-      const prices = linksData.map((l: any) => Number(l.currentPrice));
-      minPrice = Math.min(...prices);
-      maxPrice = Math.max(...prices);
-    }
-
-    // 3. Update Database (Transaction / Nested Write)
-    // Strategi: Delete semua link lama, buat link baru (cara paling aman untuk sinkronisasi)
-    await prisma.product.update({
-      where: { id },
+    await prisma.product.create({
       data: {
-        name: validated.data.name,
-        slug: validated.data.slug,
-        description: validated.data.description || "",
-        pros: validated.data.pros || "",
-        cons: validated.data.cons || "",
-        categoryId: validated.data.categoryId || null,
+        name: validData.name,
+        slug: validData.slug,
+        description: validData.description || "",
+        pros: validData.pros || "",
+        cons: validData.cons || "",
         images: finalImages,
-        
-        // Update Cache Harga
+        categoryId: validData.categoryId || null,
         minPrice,
         maxPrice,
-
-        // Update Relasi Links
         links: {
-          deleteMany: {}, // Hapus link lama
-          create: linksData.map((link) => ({
-            marketplace: link.marketplace as MarketplaceType,
+          create: validData.links.map((link) => ({
+            marketplace: link.marketplace,
             storeName: link.storeName,
             originalUrl: link.originalUrl,
             affiliateUrl: link.affiliateUrl || null,
-            currentPrice: Number(link.currentPrice),
+            currentPrice: link.currentPrice,
             region: link.region || null,
             isVerified: link.isVerified || false,
             isStockReady: true
           }))
         }
-      }
+      },
+    });
+
+  } catch (error: any) {
+    console.error("DB Error:", error);
+    if (error.code === 'P2002') return { status: "error", message: "Slug sudah dipakai produk lain." };
+    return { status: "error", message: "Gagal menyimpan ke database." };
+  }
+
+  revalidatePath("/admin/products");
+  redirect("/admin/products");
+}
+
+// --- 4. FUNGSI UPDATE PRODUCT (Dengan Bind ID) ---
+export async function updateProductWithId(id: string, prevState: any, formData: FormData) {
+  
+  // A. Parsing JSON Links
+  let parsedLinks = [];
+  try {
+    const linksJson = formData.get("linksJSON") as string;
+    if (linksJson) parsedLinks = JSON.parse(linksJson);
+  } catch (e) {
+    return { status: "error", message: "Format data Links rusak." };
+  }
+
+  // B. Siapkan Raw Data
+  const rawData = {
+    name: formData.get("name"),
+    slug: formData.get("slug"),
+    description: formData.get("description"),
+    categoryId: formData.get("category"), 
+    pros: formData.get("pros"),
+    cons: formData.get("cons"),
+    links: parsedLinks, 
+  };
+
+  // C. Validasi Zod
+  const validation = ProductSchema.safeParse(rawData);
+  if (!validation.success) {
+    return { status: "error", message: validation.error.issues[0].message };
+  }
+  const validData = validation.data;
+
+  // D. Hitung Ulang Harga
+  let minPrice = 0;
+  let maxPrice = 0;
+  if (validData.links.length > 0) {
+    const prices = validData.links.map((l) => l.currentPrice);
+    minPrice = Math.min(...prices);
+    maxPrice = Math.max(...prices);
+  }
+
+  // Handle Tags Checkbox
+  const tagIds: string[] = [];
+  Array.from(formData.keys()).forEach((key) => {
+    if (key.startsWith("tag_")) tagIds.push(key.replace("tag_", ""));
+  });
+
+  try {
+    const finalImages = await handleMultipleImageUpload(formData);
+
+    await prisma.product.update({
+      where: { id },
+      data: {
+        name: validData.name,
+        slug: validData.slug,
+        description: validData.description || "",
+        pros: validData.pros || "",
+        cons: validData.cons || "",
+        categoryId: validData.categoryId || null,
+        minPrice,
+        maxPrice,
+        images: finalImages,
+
+        // Update Tags
+        tags: {
+          set: [],
+          connect: tagIds.map((tid) => ({ id: tid })),
+        },
+
+        // Update Links (Hapus Lama -> Buat Baru)
+        links: {
+          deleteMany: {}, 
+          create: validData.links.map((link) => ({
+            marketplace: link.marketplace,
+            storeName: link.storeName,
+            originalUrl: link.originalUrl,
+            affiliateUrl: link.affiliateUrl || null,
+            currentPrice: link.currentPrice,
+            region: link.region || null,
+            isVerified: link.isVerified || false,
+            isStockReady: true
+          }))
+        }
+      },
     });
 
     revalidatePath("/admin/products");
-    return { status: "success", message: "Produk berhasil diupdate!" };
-    
+
   } catch (error: any) {
-    console.error(error);
-    if (error.code === 'P2002') {
-        return { status: "error", message: "Slug sudah digunakan produk lain." };
-    }
-    return { status: "error", message: error.message || "Gagal update produk." };
+    console.error("Update Error:", error);
+    if (error.code === 'P2002') return { status: "error", message: "Slug sudah digunakan." };
+    return { status: "error", message: "Gagal update produk." };
   }
+
+  redirect("/admin/products");
 }
 
-// ✅ FUNGSI DELETE PRODUK
+// --- 5. FUNGSI DELETE PRODUCT ---
 export async function deleteProduct(id: string) {
+  if (!id) return { status: "error", message: "ID tidak valid" };
+  
   try {
     await prisma.product.delete({
       where: { id },
     });
 
     revalidatePath("/admin/products");
-    return { status: "success", message: "Produk dihapus." };
+    return { status: "success", message: "Produk berhasil dihapus." };
   } catch (error) {
+    console.error("Delete Error:", error);
     return { status: "error", message: "Gagal menghapus produk." };
   }
 }

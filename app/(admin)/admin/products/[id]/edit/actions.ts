@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { uploadImage } from "@/lib/imagekit";
 import { MarketplaceType } from "@prisma/client";
 
-// --- HELPER: Handle Multiple Upload (Versi FIX String URL) ---
+// --- HELPER: Handle Multiple Upload ---
 async function handleMultipleImageUpload(formData: FormData) {
   const files = formData.getAll("images") as File[];
   const existingUrls = formData.getAll("existing_images") as string[];
@@ -16,7 +16,7 @@ async function handleMultipleImageUpload(formData: FormData) {
     files.map(async (file) => {
       if (file instanceof File && file.size > 0 && file.type.startsWith("image/")) {
         try {
-          const url = await uploadImage(file); // Mengembalikan string URL
+          const url = await uploadImage(file);
           if (url) newUrls.push(url);
         } catch (err) {
           console.error("Gagal upload:", err);
@@ -28,37 +28,10 @@ async function handleMultipleImageUpload(formData: FormData) {
   return [...existingUrls, ...newUrls];
 }
 
-// --- MAIN UPDATE FUNCTION ---
-export async function updateProduct(prevState: any, formData: FormData) {
-  const id = formData.get("id") as string; // Hidden input ID (biasanya otomatis ada jika form library support, atau kita ambil dari param kalau perlu. Tapi di shared form biasa tidak ada input hidden ID, jadi kita ambil dari URL params atau bind. 
-  // ⚠️ KOREKSI: Shared Form kita tidak punya input hidden name="id". 
-  // Cara terbaik di Next.js Server Action adalah menggunakan .bind(null, id) di page.tsx,
-  // TAPI karena struktur form kita shared, mari kita cari ID dari slug lama atau asumsikan ID dikirim via bind.
-  // ATAU: Kita ambil ID dari url di page sebelumnya? Tidak bisa di action.
-  
-  // SOLUSI PRAKTIS: 
-  // Kita harus pastikan ID terkirim. Karena saya tidak mengubah product-form-shared untuk kirim ID,
-  // Mari kita cek apakah formData mengirim ID? Biasanya tidak kecuali kita input hidden.
-  
-  // SEMENTARA: Kita ambil ID dari path revalidation atau bind. 
-  // TAPI TUNGGU: Di file edit/page.tsx, kita memanggil `action={updateProduct}`.
-  // Kita harus ubah sedikit page.tsx di atas atau pakai trik bind.
-  
-  // Mari kita pakai cara paling aman: Ambil ID dari formData (Asumsi kita inject hidden input ID di form shared atau pakai bind).
-  // Karena form shared dipakai create juga, kita tidak bisa inject ID sembarangan.
-  
-  // UPDATE STRATEGI:
-  // Kita akan gunakan `updateProduct.bind(null, product.id)` di page.tsx nanti.
-  // Jadi argumen pertama fungsi ini adalah `id`, argumen kedua `prevState`, ketiga `formData`.
-}
-
-// ---------------------------------------------------------
-// REVISI TOTAL AGAR KOMPATIBEL DENGAN BIND ID
-// ---------------------------------------------------------
-
+// --- FUNGSI UPDATE UTAMA (Dengan ID dari Bind) ---
 export async function updateProductWithId(id: string, prevState: any, formData: FormData) {
   
-  // 1. Ambil Data Dasar
+  // 1. Ambil Data Dasar Form
   const name = formData.get("name") as string;
   const description = formData.get("description") as string;
   const categoryId = formData.get("category") as string;
@@ -66,7 +39,7 @@ export async function updateProductWithId(id: string, prevState: any, formData: 
   const pros = formData.get("pros") as string;
   const cons = formData.get("cons") as string;
 
-  // 2. Handle Tags (Ambil checkbox yang dicentang)
+  // 2. Handle Tags (Checkbox)
   const tagIds: string[] = [];
   Array.from(formData.keys()).forEach((key) => {
     if (key.startsWith("tag_")) {
@@ -77,7 +50,7 @@ export async function updateProductWithId(id: string, prevState: any, formData: 
   // 3. Handle Images
   const finalImages = await handleMultipleImageUpload(formData);
 
-  // 4. ✅ HANDLE LINKS (JSON Parsing)
+  // 4. ✅ HANDLE LINKS & AFFILIATE URL
   const linksJson = formData.get("linksJSON") as string;
   let linksData: any[] = [];
   
@@ -100,7 +73,7 @@ export async function updateProductWithId(id: string, prevState: any, formData: 
   }
 
   try {
-    // 6. UPDATE DATABASE (TRANSACTION LIKE)
+    // 6. UPDATE DATABASE
     await prisma.product.update({
       where: { id },
       data: {
@@ -111,28 +84,30 @@ export async function updateProductWithId(id: string, prevState: any, formData: 
         cons: cons || "",
         categoryId: categoryId || null,
         
-        // Cache Harga
+        // Update Cache Harga
         minPrice,
         maxPrice,
 
         // Update Images
         images: finalImages,
 
-        // Update Tags (Reset & Re-connect)
+        // Update Tags (Putus lama, sambung baru)
         tags: {
-          set: [], // Putuskan semua hubungan tag lama
-          connect: tagIds.map((tid) => ({ id: tid })), // Sambung tag baru
+          set: [], 
+          connect: tagIds.map((tid) => ({ id: tid })), 
         },
 
-        // ✅ UPDATE LINKS (STRATEGI: DELETE ALL -> CREATE NEW)
-        // Ini cara paling aman untuk sinkronisasi data relasi one-to-many di form edit
+        // ✅ UPDATE LINKS (Hapus Semua -> Buat Baru)
         links: {
-          deleteMany: {}, // Hapus semua link lama milik produk ini
+          deleteMany: {}, // Reset link lama
           create: linksData.map((link) => ({
             marketplace: link.marketplace as MarketplaceType,
             storeName: link.storeName,
             originalUrl: link.originalUrl,
-            affiliateUrl: link.affiliateUrl || null,
+            
+            // 👇 DISINI KITA SIMPAN AFFILIATE URL
+            affiliateUrl: link.affiliateUrl || null, 
+            
             currentPrice: Number(link.currentPrice),
             region: link.region || null,
             isVerified: link.isVerified || false,
@@ -154,4 +129,17 @@ export async function updateProductWithId(id: string, prevState: any, formData: 
 
   // Redirect sukses
   redirect("/admin/products");
+}
+
+// --- FUNGSI DELETE (Tetap Diperlukan) ---
+export async function deleteProduct(id: string) {
+  try {
+    await prisma.product.delete({
+      where: { id },
+    });
+    revalidatePath("/admin/products");
+    return { status: "success", message: "Produk dihapus." };
+  } catch (error) {
+    return { status: "error", message: "Gagal menghapus produk." };
+  }
 }
