@@ -1,127 +1,117 @@
-'use server';
+"use server";
 
-import { prisma } from '@/lib/prisma';
-import { revalidatePath } from 'next/cache';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import { imagekit } from "@/lib/imagekit";
+import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
+import { uploadImage } from "@/lib/imagekit";
+import { MarketplaceType } from "@prisma/client";
 
-// Fungsi bantu untuk membuat slug dari nama produk
+// --- HELPER: Handle Multiple Upload (FIXED) ---
+async function handleMultipleImageUpload(formData: FormData) {
+  const files = formData.getAll("images") as File[];
+  const existingUrls = formData.getAll("existing_images") as string[];
+  const newUrls: string[] = [];
 
-function slugify(text: string) {
-  return text
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w\-]+/g, '')
-    .replace(/\-\-+/g, '-');
+  await Promise.all(
+    files.map(async (file) => {
+      // Validasi file: Harus File object, ada isinya, dan tipe gambar
+      if (file instanceof File && file.size > 0 && file.type.startsWith("image/")) {
+        try {
+          // ✅ FIX: uploadImage mengembalikan string URL langsung
+          const url = await uploadImage(file);
+          if (url) newUrls.push(url);
+        } catch (err) {
+          console.error("Gagal upload gambar:", file.name, err);
+        }
+      }
+    })
+  );
+
+  return [...existingUrls, ...newUrls];
 }
 
-// 1. Tambahkan parameter 'prevState' di urutan pertama
+// --- FUNGSI CREATE PRODUCT ---
 export async function createProduct(prevState: any, formData: FormData) {
-
-  const name = formData.get('name') as string;
-  const price = formData.get('price');
-  const category = formData.get('category') as string;
-  const description = formData.get('description') as string;
-  const shopeeLink = formData.get('shopeeLink') as string;
-  const pros = formData.get('pros') as string;
-  const cons = formData.get('cons') as string;
+  // 1. Ambil Field Dasar
+  const name = formData.get("name") as string;
+  const description = formData.get("description") as string;
+  const pros = formData.get("pros") as string;
+  const cons = formData.get("cons") as string;
+  const categoryId = formData.get("category") as string; // perhatikan name di form
   
-  let slug = formData.get('slug') as string;
-  if (!slug) slug = slugify(name);
+  // Handle Slug
+  let slug = formData.get("slug") as string;
+  if (!slug) {
+    slug = name.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+  }
 
-  const rawImages = formData.getAll('images') as string[];
-  const validImages = rawImages.filter(url => url.trim() !== '');
+  // 2. Handle Images
+  const finalImages = await handleMultipleImageUpload(formData);
+
+  // 3. ✅ HANDLE LINKS (JSON PARSING)
+  const linksJson = formData.get("linksJSON") as string;
+  let linksData: any[] = [];
+  
+  if (linksJson) {
+    try {
+      linksData = JSON.parse(linksJson);
+    } catch (e) {
+      console.error("JSON Error:", e);
+      return { status: "error", message: "Format link toko tidak valid." };
+    }
+  }
+
+  // 4. Hitung Min/Max Price Otomatis
+  let minPrice = 0;
+  let maxPrice = 0;
+
+  if (linksData.length > 0) {
+    const prices = linksData.map((l: any) => Number(l.currentPrice));
+    minPrice = Math.min(...prices);
+    maxPrice = Math.max(...prices);
+  }
 
   try {
+    // 5. Simpan ke Database (Nested Write)
     await prisma.product.create({
       data: {
         name,
         slug,
-        categoryId: category,
-        description,
-        price: Number(price),
-        shopeeLink,
-        pros,
-        cons,
-        images: validImages,
-      }
+        description: description || "",
+        pros: pros || "",
+        cons: cons || "",
+        images: finalImages,
+        categoryId: categoryId || null,
+        
+        // Field Baru
+        minPrice,
+        maxPrice,
+
+        // Relasi ke ProductLink
+        links: {
+          create: linksData.map((link) => ({
+            marketplace: link.marketplace as MarketplaceType,
+            storeName: link.storeName,
+            originalUrl: link.originalUrl,
+            affiliateUrl: link.affiliateUrl || null,
+            currentPrice: Number(link.currentPrice),
+            region: link.region || null,
+            isVerified: link.isVerified || false,
+            isStockReady: true
+          }))
+        }
+      },
     });
 
-    // PENTING: Refresh halaman Home di background agar data baru muncul nanti
-    revalidatePath('/');
-    
-    // KEMBALIKAN STATUS SUKSES (Jangan redirect)
-    return { 
-      success: true, 
-      message: `✅ Produk "${name}" berhasil disimpan! Silakan input lagi.` 
-    };
-
-  } catch (error) {
-    console.error('Database Error:', error);
-    return { 
-      success: false, 
-      message: '❌ Gagal menyimpan. Cek apakah Slug sudah ada atau koneksi bermasalah.' 
-    };
-  }
-}
-
-export async function login(prevState: any, formData: FormData) {
-  const username = formData.get('username') as string;
-  const password = formData.get('password') as string;
-
-  // 1. Cek ke Database
-  const admin = await prisma.admin.findUnique({
-    where: { username }
-  });
-
-  // 2. Validasi Password
-  if (!admin || admin.password !== password) {
-    return { message: 'Username atau Password Salah!' };
+  } catch (error: any) {
+    console.error("Database Error:", error);
+    if (error.code === 'P2002') {
+        return { status: "error", message: "Slug/Nama produk sudah ada." };
+    }
+    return { status: "error", message: "Gagal menyimpan produk." };
   }
 
-  // 3. Buat Session (Cookie) - Ini intinya!
-  // Kita simpan cookie bernama "admin_session"
-  (await cookies()).set('admin_session', 'true', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24 * 7, // Login valid selama 7 hari
-    path: '/',
-  });
-
-  redirect('/admin'); // Lempar ke dashboard admin
-}
-
-export async function logout() {
-  (await cookies()).delete('admin_session');
-  redirect('/login');
-}
-
-export async function uploadImage(formData: FormData) {
-  const file = formData.get("file") as File;
-  
-  if (!file) {
-    throw new Error("No file found");
-  }
-
-  // Convert file to Buffer (ImageKit needs this)
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-
-  try {
-    const response = await imagekit.upload({
-      file: buffer,
-      fileName: file.name,
-      folder: "/jagopilih/products", // Keep it organized
-    });
-
-    // Return the URL so you can save it to your Database later
-    return { success: true, url: response.url };
-    
-  } catch (error) {
-    console.error("Upload failed:", error);
-    return { success: false, error: "Upload failed" };
-  }
+  revalidatePath("/admin/products");
+  redirect("/admin/products");
 }

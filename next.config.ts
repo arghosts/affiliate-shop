@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "cf.shopee.co.id", // Shopee Legacy CDN
+        hostname: "images.unsplash.com", // Unsplash CDN
       },
       {
         protocol: "https",

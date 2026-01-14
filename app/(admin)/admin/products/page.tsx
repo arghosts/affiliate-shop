@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
 import { Plus, Search, Edit, ExternalLink } from "lucide-react";
-import DeleteButton from "./delete-button"; // ✅ Pastikan import ini ada
+import DeleteButton from "./delete-button";
 
 // Format Rupiah Helper
 const formatRupiah = (num: number) => {
@@ -16,12 +16,16 @@ const formatRupiah = (num: number) => {
 export const dynamic = "force-dynamic";
 
 export default async function ProductListPage() {
-  // Fetch Products dengan Relasi
+  // ✅ Fetch Products dengan Schema Baru
+  // Kita ambil minPrice dan hitung jumlah link toko
   const products = await prisma.product.findMany({
     orderBy: { createdAt: "desc" },
     include: {
       category: true,
       tags: true,
+      _count: {
+        select: { links: true } // Hitung jumlah toko tersedia
+      }
     },
   });
 
@@ -35,54 +39,49 @@ export default async function ProductListPage() {
         </div>
         
         <div className="flex gap-3">
-          {/* Search Placeholder */}
           <div className="relative hidden md:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input 
               type="text" 
               placeholder="Cari produk..." 
-              className="pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-coffee focus:ring-2 focus:ring-gold-accent/20 outline-none w-64"
+              className="pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gold-accent/20"
             />
           </div>
-
-          <Link
-            href="/admin/products/new"
-            className="bg-gold-accent text-white px-6 py-3 rounded-xl font-bold uppercase tracking-wider shadow-lg shadow-gold-accent/20 hover:bg-opacity-90 transition-all flex items-center gap-2"
+          <Link 
+            href="/admin/products/new" 
+            className="bg-coffee text-white px-6 py-3 rounded-xl font-bold uppercase text-xs tracking-wider hover:bg-opacity-90 transition-all flex items-center gap-2 shadow-lg shadow-coffee/20"
           >
-            <Plus className="w-5 h-5" /> Tambah Produk
+            <Plus className="w-4 h-4" /> Tambah Produk
           </Link>
         </div>
       </div>
 
-      {/* PRODUCTS TABLE */}
+      {/* TABLE */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-100">
-              <th className="p-6 text-xs font-black text-gray-400 uppercase tracking-wider">Info Produk</th>
-              <th className="p-6 text-xs font-black text-gray-400 uppercase tracking-wider">Kategori & Tags</th>
-              <th className="p-6 text-xs font-black text-gray-400 uppercase tracking-wider">Harga</th>
-              <th className="p-6 text-xs font-black text-gray-400 uppercase tracking-wider text-right">Aksi</th>
+        <table className="w-full text-left">
+          <thead className="bg-gray-50 border-b border-gray-100">
+            <tr>
+              <th className="p-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Produk</th>
+              <th className="p-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Kategori</th>
+              <th className="p-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Harga Terbaik</th>
+              <th className="p-6 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Aksi</th>
             </tr>
           </thead>
-          
-          {/* ✅ TBODY LANGSUNG BUNGKUS TR (JANGAN ADA DIV DISINI) */}
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-50">
             {products.length === 0 ? (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-gray-400 italic">
-                  Belum ada produk. Silakan tambah baru.
+                <td colSpan={4} className="p-8 text-center text-gray-400">
+                  Belum ada produk. Silakan tambah produk baru.
                 </td>
               </tr>
             ) : (
               products.map((product) => (
-                // ✅ TR ADALAH DIRECT CHILD DARI TBODY
                 <tr key={product.id} className="hover:bg-gray-50/50 transition-colors group">
                   
                   {/* Info Produk */}
                   <td className="p-6">
                     <div className="flex items-center gap-4">
-                      <div className="relative w-16 h-16 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden shrink-0">
+                      <div className="w-16 h-16 rounded-lg bg-gray-100 relative overflow-hidden flex-shrink-0 border border-gray-200">
                         {product.images[0] ? (
                           <Image 
                             src={product.images[0]} 
@@ -91,42 +90,44 @@ export default async function ProductListPage() {
                             className="object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">No Img</div>
+                          <div className="flex items-center justify-center h-full text-xs text-gray-400">No Img</div>
                         )}
                       </div>
                       <div>
-                        <h4 className="font-bold text-coffee group-hover:text-gold-accent transition-colors line-clamp-1">
+                        <h3 className="font-bold text-coffee group-hover:text-gold-accent transition-colors">
                           {product.name}
-                        </h4>
-                        <div className="flex items-center gap-2 mt-1">
-                           {product.shopeeLink && <span className="text-[10px] px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full font-bold">Shopee</span>}
-                           {product.tokpedLink && <span className="text-[10px] px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-bold">Tokped</span>}
+                        </h3>
+                        <div className="flex gap-2 mt-1">
+                          {product.isFeatured && (
+                            <span className="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-bold">Featured</span>
+                          )}
+                          <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-bold">
+                            {product._count.links} Toko Aktif
+                          </span>
                         </div>
                       </div>
                     </div>
                   </td>
 
-                  {/* Kategori & Tags */}
+                  {/* Kategori */}
                   <td className="p-6">
-                    <div className="space-y-2">
-                      <span className="inline-block px-3 py-1 bg-coffee/5 text-coffee text-xs font-bold rounded-md uppercase tracking-wider">
-                        {product.category?.name || "Uncategorized"}
+                    {product.category ? (
+                      <span className="px-3 py-1 rounded-full bg-gray-100 text-xs font-bold text-gray-500">
+                        {product.category.name}
                       </span>
-                      <div className="flex flex-wrap gap-1">
-                        {product.tags.map(tag => (
-                           <span key={tag.id} className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-                             #{tag.name}
-                           </span>
-                        ))}
-                      </div>
-                    </div>
+                    ) : (
+                      <span className="text-gray-300 text-xs italic">Uncategorized</span>
+                    )}
                   </td>
 
-                  {/* Harga */}
-                  <td className="p-6">
-                    <span className="font-black text-coffee">
-                      {formatRupiah(Number(product.price))}
+                  {/* ✅ UPDATE: HARGA (Gunakan minPrice) */}
+                  <td className="p-6 font-mono text-sm">
+                    <span className="font-bold text-coffee">
+                      {product.minPrice 
+                        ? formatRupiah(Number(product.minPrice)) 
+                        : "Cek Detail"}
                     </span>
+                    <span className="block text-[10px] text-gray-400">Mulai dari</span>
                   </td>
 
                   {/* Aksi */}
@@ -141,7 +142,6 @@ export default async function ProductListPage() {
                         <ExternalLink className="w-4 h-4" />
                       </a>
                       
-                      {/* Link Edit (Akan kita buat setelah ini) */}
                       <Link 
                         href={`/admin/products/${product.id}/edit`}
                         className="p-2 text-gray-400 hover:text-gold-accent hover:bg-teal-50 rounded-lg transition-all"
@@ -150,7 +150,6 @@ export default async function ProductListPage() {
                         <Edit className="w-4 h-4" />
                       </Link>
                       
-                      {/* ✅ DELETE BUTTON COMPONENT */}
                       <DeleteButton productId={product.id} />
                       
                     </div>

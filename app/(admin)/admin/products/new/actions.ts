@@ -4,140 +4,114 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { uploadImage } from "@/lib/imagekit"; // Pastikan helper ini ada
+import { uploadImage } from "@/lib/imagekit";
+import { MarketplaceType } from "@prisma/client";
 
-// --- HELPER: Handle Multiple Upload ---
+// --- HELPER: Handle Multiple Upload (FIXED) ---
 async function handleMultipleImageUpload(formData: FormData) {
-  // 1. Ambil File Baru
   const files = formData.getAll("images") as File[];
-  
-  // 2. Ambil URL Lama (jika ada, biasanya untuk edit, tapi create jarang pakai ini)
   const existingUrls = formData.getAll("existing_images") as string[];
-
   const newUrls: string[] = [];
 
-  // 3. Upload File Baru ke ImageKit (Paralel)
   await Promise.all(
     files.map(async (file) => {
       // Validasi file: Harus File object, ada isinya, dan tipe gambar
       if (file instanceof File && file.size > 0 && file.type.startsWith("image/")) {
-        const url = await uploadImage(file, "/jagopilih/products");
-        newUrls.push(url);
+        try {
+          // ✅ FIX: uploadImage mengembalikan string URL langsung
+          const url = await uploadImage(file);
+          if (url) newUrls.push(url);
+        } catch (err) {
+          console.error("Gagal upload gambar:", file.name, err);
+        }
       }
     })
   );
 
-  // 4. Gabungkan
   return [...existingUrls, ...newUrls];
 }
 
-// --- SKEMA VALIDASI ---
-const productSchema = z.object({
-  name: z.string()
-    .trim()
-    .min(3, "Nama produk wajib diisi")
-    .max(150, "Nama produk terlalu panjang")
-    .regex(/^[a-zA-Z0-9\s\-_.,()]+$/, "Nama mengandung karakter tidak valid"),
-    
-  slug: z.string().trim().toLowerCase().min(3),
+// --- FUNGSI CREATE PRODUCT ---
+export async function createProduct(prevState: any, formData: FormData) {
+  // 1. Ambil Field Dasar
+  const name = formData.get("name") as string;
+  const description = formData.get("description") as string;
+  const pros = formData.get("pros") as string;
+  const cons = formData.get("cons") as string;
+  const categoryId = formData.get("category") as string; // perhatikan name di form
   
-  price: z.coerce.number().min(1000, "Harga tidak valid"),
-  categoryId: z.string().min(1, "Kategori wajib dipilih"),
-  description: z.string().trim().optional(),
-  
-  // Validasi Array Gambar (Array of Strings)
-  images: z.array(z.string().url().startsWith("https://", "Link gambar harus HTTPS")).min(1, "Minimal 1 gambar"),
-  
-  shopeeLink: z.string().trim().optional()
-    .refine(val => !val || val.startsWith("https://"), "Link Shopee harus HTTPS"),
-    
-  tokpedLink: z.string().trim().optional()
-    .refine(val => !val || val.startsWith("https://"), "Link Tokopedia harus HTTPS"),
-    
-  pros: z.string().trim().optional(),
-  cons: z.string().trim().optional(),
-  tags: z.array(z.string()).optional(),
-});
-
-// --- ACTION: CREATE PRODUCT ---
-export async function createProduct(id: string | null, prevState: any, formData: FormData) {
-  
-  // 1. Proses Upload Gambar Dulu
-  let imageLinks: string[] = [];
-  try {
-     imageLinks = await handleMultipleImageUpload(formData);
-  } catch (e) {
-     return { status: "error", message: "Gagal upload gambar ke cloud." };
+  // Handle Slug
+  let slug = formData.get("slug") as string;
+  if (!slug) {
+    slug = name.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
   }
 
-  // 2. Handle Tags (Manual parsing dari checkbox name="tag_UUID")
-  const tagIds: string[] = [];
-  Array.from(formData.keys()).forEach((key) => {
-    if (key.startsWith("tag_")) {
-      tagIds.push(key.replace("tag_", ""));
+  // 2. Handle Images
+  const finalImages = await handleMultipleImageUpload(formData);
+
+  // 3. ✅ HANDLE LINKS (JSON PARSING)
+  const linksJson = formData.get("linksJSON") as string;
+  let linksData: any[] = [];
+  
+  if (linksJson) {
+    try {
+      linksData = JSON.parse(linksJson);
+    } catch (e) {
+      console.error("JSON Error:", e);
+      return { status: "error", message: "Format link toko tidak valid." };
     }
-  });
-
-  // 3. Susun Raw Data untuk Validasi
-  const rawData = {
-    name: formData.get("name"),
-    slug: formData.get("slug"),
-    price: formData.get("price"),
-    categoryId: formData.get("categoryId"),
-    description: formData.get("description"),
-    images: imageLinks, // Array URL hasil upload
-    shopeeLink: formData.get("shopeeLink"),
-    tokpedLink: formData.get("tokpedLink"),
-    pros: formData.get("pros"),
-    cons: formData.get("cons"),
-    tags: tagIds,
-  };
-
-  const result = productSchema.safeParse(rawData);
-
-  if (!result.success) {
-    return {
-      status: "error",
-      message: result.error.issues[0].message,
-    };
   }
 
-  const validated = result.data;
+  // 4. Hitung Min/Max Price Otomatis
+  let minPrice = 0;
+  let maxPrice = 0;
+
+  if (linksData.length > 0) {
+    const prices = linksData.map((l: any) => Number(l.currentPrice));
+    minPrice = Math.min(...prices);
+    maxPrice = Math.max(...prices);
+  }
 
   try {
-    // 4. Simpan ke Database
+    // 5. Simpan ke Database (Nested Write)
     await prisma.product.create({
       data: {
-        name: validated.name,
-        slug: validated.slug,
-        description: validated.description || "",
-        price: validated.price,
-        categoryId: validated.categoryId,
-        shopeeLink: validated.shopeeLink || null,
-        tokpedLink: validated.tokpedLink || null,
-        pros: validated.pros || "",
-        cons: validated.cons || "",
+        name,
+        slug,
+        description: description || "",
+        pros: pros || "",
+        cons: cons || "",
+        images: finalImages,
+        categoryId: categoryId || null,
         
-        // 👇 PERBAIKAN UTAMA: Langsung simpan array string
-        images: validated.images, 
-        
-        // Relasi Tags
-        tags: {
-          connect: validated.tags?.map((id) => ({ id }))
+        // Field Baru
+        minPrice,
+        maxPrice,
+
+        // Relasi ke ProductLink
+        links: {
+          create: linksData.map((link) => ({
+            marketplace: link.marketplace as MarketplaceType,
+            storeName: link.storeName,
+            originalUrl: link.originalUrl,
+            affiliateUrl: link.affiliateUrl || null,
+            currentPrice: Number(link.currentPrice),
+            region: link.region || null,
+            isVerified: link.isVerified || false,
+            isStockReady: true
+          }))
         }
       },
     });
 
-    revalidatePath("/admin/products");
-    
   } catch (error: any) {
-    console.error("Create Error:", error);
+    console.error("Database Error:", error);
     if (error.code === 'P2002') {
-        return { status: "error", message: "Slug URL sudah digunakan produk lain." };
+        return { status: "error", message: "Slug/Nama produk sudah ada." };
     }
     return { status: "error", message: "Gagal menyimpan produk." };
   }
 
-  // Redirect wajib di luar try-catch
+  revalidatePath("/admin/products");
   redirect("/admin/products");
 }

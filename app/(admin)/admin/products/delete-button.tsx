@@ -2,29 +2,31 @@
 
 import { Trash2, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { deleteProduct } from "./actions"; // Import action yang tadi
+import { deleteProduct } from "./actions"; // ✅ Pastikan import dari file sebelah
 import toast from "react-hot-toast";
 
 export default function DeleteButton({ productId }: { productId: string }) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
-    // 1. Konfirmasi User (Browser Native Confirm cukup untuk MVP)
-    const confirmed = window.confirm("Yakin ingin menghapus produk ini? Tindakan tidak bisa dibatalkan.");
+    // Konfirmasi sederhana
+    const confirmed = window.confirm("Yakin ingin menghapus produk ini? Semua data harga dan link akan ikut terhapus.");
     if (!confirmed) return;
 
     setIsDeleting(true);
 
-    // 2. Panggil Server Action
-    const result = await deleteProduct(productId);
-
-    if (result.status === "success") {
-      toast.success(result.message);
-    } else {
-      toast.error(result.message);
+    try {
+      const result = await deleteProduct(productId);
+      if (result.status === "success") {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error("Terjadi kesalahan.");
+    } finally {
+      setIsDeleting(false);
     }
-    
-    setIsDeleting(false);
   };
 
   return (
