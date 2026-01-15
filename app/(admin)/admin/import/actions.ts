@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { MarketplaceType } from "@prisma/client";
 
-// Helper Slugify
+// Helper Slugify yang lebih bersih
 function slugify(text: string) {
   if (!text) return "";
   return text
@@ -16,140 +16,138 @@ function slugify(text: string) {
     .replace(/--+/g, "-");    
 }
 
+// Mapping Prefix Excel ke Enum Database
+const marketplaceMap: Record<string, MarketplaceType> = {
+  shopee: MarketplaceType.SHOPEE,
+  tokped: MarketplaceType.TOKOPEDIA,
+  tokopedia: MarketplaceType.TOKOPEDIA,
+  tiktok: MarketplaceType.TIKTOK,
+  lazada: MarketplaceType.LAZADA,
+  blibli: MarketplaceType.BLIBLI,
+  website: MarketplaceType.WEBSITE_RESMI,
+  whatsapp: MarketplaceType.WHATSAPP_LOKAL,
+  wa: MarketplaceType.WHATSAPP_LOKAL,
+  offline: MarketplaceType.OFFLINE_STORE,
+};
+
 export async function importProducts(rawRows: any[]) {
   try {
-    let successCount = 0;
-    let errorCount = 0;
+    // 1. MAP UNTUK GROUPING (Penyelamat dari duplikasi)
+    const productGroups = new Map<string, any>();
 
     for (const rawRow of rawRows) {
-      // 1. NORMALISASI KEYS (Lowercase & Trim)
       const row: any = {};
       Object.keys(rawRow).forEach((key) => {
-        // Hapus spasi dan ubah ke lowercase (misal "Shopee URL " -> "shopee_url")
         const cleanKey = key.toLowerCase().trim().replace(/\s+/g, "_");
         row[cleanKey] = rawRow[key];
       });
 
-      // 2. VALIDASI DASAR
-      if (!row.name) {
-        console.log("⚠️ Skip baris karena nama produk kosong");
-        errorCount++;
-        continue;
-      }
+      if (!row.name) continue;
 
-      // 3. HANDLE KATEGORI (Find or Create)
-      let categoryId = null;
-      if (row.category) {
-        const catSlug = slugify(row.category);
-        const existingCat = await prisma.category.findFirst({ where: { slug: catSlug } });
-        if (existingCat) {
-          categoryId = existingCat.id;
-        } else {
-          const newCat = await prisma.category.create({
-            data: { name: row.category, slug: catSlug }
-          });
-          categoryId = newCat.id;
-        }
-      }
-
-      // 4. HANDLE IMAGES (Split by comma)
-      let imagesList: string[] = [];
-      if (row.images) {
-        imagesList = String(row.images).split(",").map(url => url.trim());
-      }
-
-      // 5. KONSTRUKSI LINKS & HARGA
-      const linksToCreate: any[] = [];
+      const slug = slugify(String(row.name));
       
-      // Mapping logic: Check kolom excel untuk marketplace tertentu
-      // Format Excel: shopee_url, shopee_price, shopee_store, shopee_affiliate
-      
-      const marketplaces: Record<string, MarketplaceType> = {
-        'shopee': 'SHOPEE',
-        'tokped': 'TOKOPEDIA',
-        'tokopedia': 'TOKOPEDIA',
-        'tiktok': 'TIKTOK',
-        'lazada': 'LAZADA',
-        'blibli': 'BLIBLI',
-        'wa': 'WHATSAPP_LOKAL',
-        'website': 'WEBSITE_RESMI'
-      };
-
-      Object.keys(marketplaces).forEach((prefix) => {
+      // Ambil link dari baris ini (Dynamic Prefix)
+      const currentLinks: any[] = [];
+      Object.keys(marketplaceMap).forEach((prefix) => {
         const urlKey = `${prefix}_url`;
-        const priceKey = `${prefix}_price`;
-        const storeKey = `${prefix}_store`;
-        const affiliateKey = `${prefix}_affiliate`;
-        const regionKey = `${prefix}_region`;
-
-        if (row[urlKey]) { // Jika ada URL, berarti ada data link
-            linksToCreate.push({
-                marketplace: marketplaces[prefix],
-                originalUrl: String(row[urlKey]),
-                affiliateUrl: row[affiliateKey] ? String(row[affiliateKey]) : null,
-                currentPrice: row[priceKey] ? Number(row[priceKey]) : 0,
-                storeName: row[storeKey] ? String(row[storeKey]) : `${prefix.toUpperCase()} Store`, // Default store name
-                region: row[regionKey] ? String(row[regionKey]) : null,
-                isVerified: true, // Default true jika import bulk (asumsi kurasi admin)
-                isStockReady: true
-            });
+        if (row[urlKey]) {
+          currentLinks.push({
+            marketplace: marketplaceMap[prefix],
+            storeName: row[`${prefix}_store`] || `${prefix.toUpperCase()} Store`,
+            originalUrl: String(row[urlKey]),
+            affiliateUrl: row[`${prefix}_affiliate`] || null,
+            currentPrice: Number(row[`${prefix}_price`] || 0),
+            region: row[`${prefix}_region`] ? String(row[`${prefix}_region`]) : null, // ✅ Ambil Region
+            isVerified: row[`${prefix}_verified`] !== undefined ? String(row[`${prefix}_verified`]).toLowerCase() === "true" : false, // ✅ Ambil Status Verified
+            isStockReady: row[`${prefix}_stock`] !== undefined ? String(row[`${prefix}_stock`]).toLowerCase() === "true" : true,
+          });
         }
       });
 
-      // 6. HITUNG MIN & MAX PRICE
-      let minPrice = 0;
-      let maxPrice = 0;
-      if (linksToCreate.length > 0) {
-        const prices = linksToCreate.map(l => l.currentPrice);
-        minPrice = Math.min(...prices);
-        maxPrice = Math.max(...prices);
+      // 2. LOGIKA PENGGABUNGAN (Grouping)
+      if (productGroups.has(slug)) {
+        // Jika slug sudah ada di Map, tambahkan link-nya saja
+        const existing = productGroups.get(slug);
+        existing.links.push(...currentLinks);
+      } else {
+        // Jika belum ada, buat entry baru
+        productGroups.set(slug, {
+          name: String(row.name),
+          slug: slug,
+          description: row.description || "",
+          categoryId: row.category, // Mentah dulu, nanti di-upsert
+          images: row.images ? String(row.images).split(",").map(i => i.trim()) : [],
+          pros: row.pros || null,
+          cons: row.cons || null,
+          isFeatured: String(row.isfeatured).toLowerCase() === "true",
+          links: currentLinks,
+        });
       }
+    }
 
-      // 7. SIMPAN PRODUK KE DB
+    // 3. EKSEKUSI KE DATABASE (Upsert Pattern)
+    let successCount = 0;
+    
+    for (const productData of productGroups.values()) {
       try {
-        await prisma.product.create({
-          data: {
-            name: row.name,
-            slug: row.slug ? slugify(String(row.slug)) : slugify(row.name + "-" + Date.now()), 
-            description: row.description ? String(row.description) : "",
-            
-            // Harga cache
+        // A. Handle Category (Tetap perlu di-upsert per grup)
+        let categoryId = null;
+        if (productData.categoryId) {
+          const cat = await prisma.category.upsert({
+            where: { name: String(productData.categoryId).trim() },
+            update: {},
+            create: { 
+              name: String(productData.categoryId).trim(),
+              slug: slugify(String(productData.categoryId))
+            },
+          });
+          categoryId = cat.id;
+        }
+
+        // B. Hitung Min/Max Price dari semua link yang terkumpul
+        const prices = productData.links.map((l: any) => l.currentPrice).filter((p: number) => p > 0);
+        const minPrice = prices.length > 0 ? Math.min(...prices) : null;
+        const maxPrice = prices.length > 0 ? Math.max(...prices) : null;
+
+        // C. UPSERT PRODUCT
+        // Jika slug sudah ada di DB, kita update. Jika tidak, kita create.
+        await prisma.product.upsert({
+          where: { slug: productData.slug },
+          update: {
             minPrice,
             maxPrice,
-            
-            pros: row.pros ? String(row.pros) : null,
-            cons: row.cons ? String(row.cons) : null,
-            
-            isFeatured: String(row.isfeatured).toLowerCase() === "true",
-            categoryId: categoryId,
-            images: imagesList,
-
-            // Nested Create untuk Links
             links: {
-                create: linksToCreate
+              // Kita buat link baru. (Hati-hati: ini akan terus menambah link)
+              // Jika ingin bersih, bisa pakai deleteMany dulu di sini.
+              create: productData.links
             }
           },
+          create: {
+            name: productData.name,
+            slug: productData.slug,
+            description: productData.description,
+            minPrice,
+            maxPrice,
+            categoryId,
+            images: productData.images,
+            pros: productData.pros,
+            cons: productData.cons,
+            isFeatured: productData.isFeatured,
+            links: {
+              create: productData.links
+            }
+          }
         });
+
         successCount++;
-      } catch (err: any) {
-        console.error("❌ Gagal simpan produk:", row.name, err.message);
-        errorCount++;
+      } catch (err) {
+        console.error(`Gagal proses ${productData.slug}:`, err);
       }
     }
 
     revalidatePath("/admin/products");
-    
-    if (successCount === 0) {
-      return { success: false, message: `Gagal! 0 data masuk. Pastikan format kolom benar (name, shopee_url, dll).` };
-    }
-
-    return { 
-      success: true, 
-      message: `Sukses import ${successCount} produk. Gagal: ${errorCount}` 
-    };
-
+    return { success: true, message: `Berhasil memproses ${successCount} produk unik.` };
   } catch (error: any) {
-    console.error("Critical Error Import:", error);
-    return { success: false, message: `Error Sistem: ${error.message}` };
+    return { success: false, message: error.message };
   }
 }
