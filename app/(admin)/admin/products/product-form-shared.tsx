@@ -246,6 +246,28 @@ export default function ProductFormShared({ categories, tags, action, initialDat
             <textarea name="cons" defaultValue={initialData?.cons} placeholder="Kekurangan..." className="w-full p-3 rounded-xl border border-red-200 bg-red-50/50" rows={3}/>
          </div>
       </div>
+      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+      <h3 className="text-lg font-bold text-coffee mb-6 border-b pb-4">Tags / Label</h3>
+      <div className="flex flex-wrap gap-4">
+        {tags.map((tag) => {
+          const isChecked = initialData?.tags?.some((t: any) => t.id === tag.id);
+          return (
+            <label key={tag.id} className="cursor-pointer select-none">
+              <input 
+                type="checkbox" 
+                name="tagIds" // ✅ Gunakan nama yang sama untuk semua
+                value={tag.id} // ✅ Masukkan ID sebagai value
+                className="peer sr-only" 
+                defaultChecked={isChecked}
+              />
+              <div className="px-4 py-2 rounded-full border border-gray-200 text-sm font-bold text-gray-500 peer-checked:bg-gold-accent peer-checked:text-white peer-checked:border-gold-accent transition-all hover:bg-gray-50">
+                #{tag.name}
+              </div>
+            </label>
+          );
+        })}
+      </div>
+    </div>
 
       {/* SUBMIT */}
       <div className="flex justify-end pb-10">

@@ -106,10 +106,7 @@ export async function createProduct(prevState: any, formData: FormData) {
   }
 
   // Handle Tags
-  const tagIds: string[] = [];
-  Array.from(formData.keys()).forEach((key) => {
-    if (key.startsWith("tag_")) tagIds.push(key.replace("tag_", ""));
-  });
+  const tagIds = formData.getAll("tagIds") as string[];
 
   try {
     const finalImages = await handleMultipleImageUpload(formData);
@@ -127,7 +124,7 @@ export async function createProduct(prevState: any, formData: FormData) {
         images: finalImages,
         
         tags: {
-           connect: tagIds.map((tid) => ({ id: tid })),
+           connect: tagIds.map((id) => ({ id })),
         },
 
         links: {
@@ -202,10 +199,7 @@ export async function updateProductWithId(id: string, prevState: any, formData: 
   }
 
   // Handle Tags
-  const tagIds: string[] = [];
-  Array.from(formData.keys()).forEach((key) => {
-    if (key.startsWith("tag_")) tagIds.push(key.replace("tag_", ""));
-  });
+ const tagIds = formData.getAll("tagIds") as string[]; // ✅ Ambil array tagIds
 
   try {
     const finalImages = await handleMultipleImageUpload(formData);
@@ -224,8 +218,7 @@ export async function updateProductWithId(id: string, prevState: any, formData: 
         images: finalImages,
 
         tags: {
-          set: [], // Reset tag lama
-          connect: tagIds.map((tid) => ({ id: tid })),
+          set: tagIds.map((id) => ({ id })), // 'set' akan menghapus yang lama dan pasang yang baru
         },
 
         // ✅ FIX BUG DUPLIKAT DI SINI

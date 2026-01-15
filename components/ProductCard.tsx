@@ -39,6 +39,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
           src={product.image || "/placeholder.jpg"}
           alt={product.name}
           fill
+          priority
           className="object-cover transition-transform duration-500 group-hover:scale-110"
           sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
         />
@@ -59,12 +60,22 @@ export default function ProductCard({ product }: { product: ProductProps }) {
 
         {/* Harga & Info Toko */}
         <div className="mt-auto space-y-2">
-          <div>
-            <p className="text-[10px] text-gray-400 font-medium">Mulai dari</p>
-            <p className="text-lg font-black text-gold-accent">
-              {formattedPrice}
-            </p>
-          </div>
+            <div className="space-y-2">
+              {product.minPrice && Number(product.minPrice) > 0 ? (
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-400 uppercase font-bold">Mulai dari</span>
+                  <span className="text-gold-accent font-black text-lg">
+                    {formattedPrice}
+                  </span>
+                </div>
+              ) : (
+                <div className="bg-gray-100 py-2 px-3 rounded-lg border border-dashed border-gray-300">
+                  <span className="text-gray-400 text-xs font-bold italic">
+                    Stok Belum Tersedia
+                  </span>
+                </div>
+              )}
+            </div>
 
           {/* Footer Card: Info Jumlah Toko */}
           <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">

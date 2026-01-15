@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Image from "next/image";
 
 interface ImageCarouselProps {
   images: string[];
@@ -39,45 +40,50 @@ export default function ImageCarousel({ images, productName }: ImageCarouselProp
     <>
       {/* =========================================
           📱 MOBILE VIEW: SWIPEABLE SLIDER (Native)
-          Muncul di HP, Hilang di Desktop (md:hidden)
-         ========================================= */}
-      <div className="block md:hidden relative group">
-        
-        {/* Container Scroll Snap */}
+          ========================================= */}
+      <div className="md:hidden -mx-4 relative">
         <div 
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide aspect-square bg-white rounded-2xl border border-gray-100"
+          className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+          style={{ scrollBehavior: 'smooth' }}
         >
           {imageList.map((url, index) => (
-            <div key={index} className="w-full flex-shrink-0 snap-center flex items-center justify-center relative">
-              <img 
-                src={url} 
-                alt={`${productName} - ${index + 1}`} 
-                className="w-full h-full object-contain p-4"
-              />
+            <div 
+              key={index} 
+              className="flex-shrink-0 w-full snap-center px-4"
+            >
+              <div className="relative aspect-square w-full bg-white rounded-2xl overflow-hidden border border-gray-100 p-6 flex items-center justify-center">
+                <Image 
+                  // Optimasi ImageKit: Resize ke 500px untuk Mobile
+                  src={`${url}?tr=w-300,h-300,fo-auto`}
+                  alt={`${productName} - Slide ${index + 1}`}
+                  fill
+                  // PENTING: Hanya gambar pertama yang boleh 'priority'
+                  priority={index === 0}
+                  fetchPriority="high"
+                  // Memberitahu browser ukuran yang sebenarnya dipakai
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
+                  className="object-contain"
+                />
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Indikator Dots (Mobile) */}
+        {/* Indikator Dots */}
         {imageList.length > 1 && (
-          <div className="absolute bottom-4 left-0 w-full flex justify-center gap-2">
-            {imageList.map((_, idx) => (
+          <div className="flex justify-center gap-2 mt-4">
+            {imageList.map((_, index) => (
               <div 
-                key={idx}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  currentSlide === idx ? "w-6 bg-coffee" : "w-2 bg-coffee/20"
+                key={index}
+                className={`h-1.5 transition-all duration-300 rounded-full ${
+                  currentSlide === index ? "w-6 bg-gold-accent" : "w-1.5 bg-gray-200"
                 }`}
               />
             ))}
           </div>
         )}
-
-        {/* Indicator jumlah foto (Pojok Kanan Atas) */}
-        <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full">
-          {currentSlide + 1} / {imageList.length}
-        </div>
       </div>
 
 
@@ -89,11 +95,15 @@ export default function ImageCarousel({ images, productName }: ImageCarouselProp
         
         {/* Main Image (Besar) */}
         <div className="relative aspect-square w-full bg-white rounded-2xl overflow-hidden border border-gray-100 p-8 flex items-center justify-center group">
-          <img 
-            src={activeImage}
+          <Image 
+            src={`${activeImage}?tr=w-600,h-600,fo-auto`}
             alt={productName}
+            fill // Mengisi container div
+            priority // PENTING: Memberitahu browser ini LCP
+            fetchPriority="high"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px" // Membantu browser pilih ukuran
             className="object-contain w-full h-full group-hover:scale-105 transition-transform duration-500"
-          />
+            />
         </div>
 
         {/* Thumbnails (Kecil) */}
@@ -109,11 +119,13 @@ export default function ImageCarousel({ images, productName }: ImageCarouselProp
                     : "border-transparent opacity-60 hover:opacity-100 hover:border-coffee/10"
                 }`}
               >
-                <img 
-                  src={url}
+                <Image 
+                  src={`${url}?tr=w-100,h-100,fo-auto`}
                   alt={`Thumbnail ${index + 1}`}
+                  width={80}
+                  height={80}
                   className="w-full h-full object-contain"
-                />
+                  />
               </button>
             ))}
           </div>

@@ -29,16 +29,8 @@ export default function Hero({
   return (
     // 1. BACKGROUND BASE: Diganti ke Putih Gading (#FDFCF8) agar kontras dikit dengan warm-bg di bawah
     <section className="relative overflow-hidden bg-[#FDFCF8] pt-24 lg:pt-32 pb-32">
-      
-      {/* 2. TEXTURE NOISE (Efek Kertas Premium) */}
-      <div 
-        className="absolute inset-0 opacity-[0.03] z-0 pointer-events-none mix-blend-multiply"
-        style={{ 
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")` 
-        }}
-      />
 
-      {/* 3. BACKGROUND DECOR (Blobs & Grid) */}
+      {/* 2. BACKGROUND DECOR (Blobs & Grid) */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full z-0 pointer-events-none overflow-hidden">
         {/* Blob Gold - Opacity dikurangi biar lebih soft */}
         <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-gold-accent/5 rounded-full blur-3xl opacity-60 mix-blend-multiply animate-blob" />
@@ -159,7 +151,7 @@ export default function Hero({
                     </div>
                     <div>
                        <p className="text-xs font-bold text-white/80">Trusted by</p>
-                       <p className="text-sm font-black text-white">10k+ Users</p>
+                       <p className="text-sm font-black text-white">Real Users</p>
                     </div>
                   </div>
               </motion.div>

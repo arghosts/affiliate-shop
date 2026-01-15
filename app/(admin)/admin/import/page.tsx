@@ -29,9 +29,10 @@ export default function ImportPage() {
         const data = XLSX.utils.sheet_to_json(ws);
 
         // Sanitasi Data Awal (Hapus row kosong)
-        const cleanData = data.filter((row: any) => 
+        const rawData = data.filter((row: any) => 
            row && Object.keys(row).length > 0
         );
+        const cleanData = JSON.parse(JSON.stringify(rawData));
 
         // Kirim ke Server Action
         const result = await importProducts(cleanData);
