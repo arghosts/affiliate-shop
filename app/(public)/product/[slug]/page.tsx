@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Metadata } from "next";
 import { MarketplaceType } from "@prisma/client";
 import FloatingCTA from "@/components/FloatingCTA";
+import AffiliateButton from "@/components/AffiliateButton";
 
 // --- Utility Functions ---
 const formatRupiah = (num: number | null) => {
@@ -151,18 +152,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     }
   };
 
-  // --- Helper untuk Label Tombol Dinamis ---
-  const getButtonLabel = (marketplace: MarketplaceType) => {
-    switch (marketplace) {
-      case 'SHOPEE': return 'Beli di Shopee';
-      case 'TOKOPEDIA': return 'Beli di Tokopedia';
-      case 'TIKTOK': return 'Beli di TikTok';
-      case 'WHATSAPP_LOKAL': return 'Chat WA';
-      case 'WEBSITE_RESMI': return 'Web Resmi';
-      default: return 'Beli Sekarang';
-    }
-  };
-  // 1. Logic Mencari "Best Deal" (Verified + Termurah)
+  // 3. Logic Mencari "Best Deal" (Verified + Termurah)
   // Filter hanya yang Verified & Stock Ready
   const verifiedLinks = product.links.filter(l => l.isVerified && l.isStockReady);
 
@@ -316,17 +306,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                             </div>
                           )}
                         </div>
-
                         {/* ✅ UPDATE POINT 3: Tombol Dinamis */}
-                        <a 
-                          href={link.affiliateUrl || link.originalUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${getMarketplaceStyle(link.marketplace, link.isStockReady)}`}
-                        >
-                          {getButtonLabel(link.marketplace)}
-                          {link.isStockReady && <ExternalLink className="w-4 h-4" />}
-                        </a>
+                        <AffiliateButton 
+                            url={link.affiliateUrl || link.originalUrl}
+                            // Kita kirim Style Warna dari Server ke Client Component
+                            className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${getMarketplaceStyle(link.marketplace, link.isStockReady)}`}
+                          />
                       </div>
                     </div>
                   ))

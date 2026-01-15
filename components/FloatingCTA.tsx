@@ -3,7 +3,24 @@
 import Link from "next/link";
 import { ShoppingBag, ExternalLink, BadgeCheck, Store } from "lucide-react";
 import { MarketplaceType } from "@prisma/client";
+import { useState, useEffect } from "react"; // 1. Tambah Import ini
 
+// --- 2. BANK KATA-KATA (Opsi Random) ---
+const CTA_OPTIONS = [
+  "Intip Harga Promo",
+  "Cek Diskon App",
+  "Amankan Stok",
+  "Cek Harga Asli",
+  "Lihat Voucher",
+];
+
+const BADGE_OPTIONS = [
+  "🔥 Paling Worth",
+  "✅ Admin Approved",
+  "⚡ Anti Boncos",
+  "👑 Juara Kelas",
+  "💎 Hidden Gem",
+];
 // Helper format rupiah
 const formatRupiah = (num: number) => 
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(num);
@@ -20,6 +37,19 @@ interface FloatingCTAProps {
 }
 
 export default function FloatingCTA({ bestDeal }: FloatingCTAProps) {
+  // --- 3. STATE UNTUK TEXT DINAMIS ---
+  // Default value diisi agar Server & Client sinkron saat loading awal (mencegah error hydration)
+  const [ctaText, setCtaText] = useState("Cek Harga & Stok");
+  const [badgeText, setBadgeText] = useState("🔥 Paling Worth");
+
+  // --- 4. EFEK RANDOMIZER (Hanya jalan di browser) ---
+  useEffect(() => {
+    const randomCTA = CTA_OPTIONS[Math.floor(Math.random() * CTA_OPTIONS.length)];
+    const randomBadge = BADGE_OPTIONS[Math.floor(Math.random() * BADGE_OPTIONS.length)];
+    
+    setCtaText(randomCTA);
+    setBadgeText(randomBadge);
+  }, []);
   // Jika tidak ada deal (misal semua toko belum verified / stok habis), sembunyikan CTA
   if (!bestDeal) return null;
 
@@ -46,7 +76,7 @@ export default function FloatingCTA({ bestDeal }: FloatingCTAProps) {
         <div className="flex flex-col">
            <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500 mb-1">
              <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider flex items-center gap-1">
-               <BadgeCheck className="w-3 h-3" /> Rekomendasi Kami
+               <BadgeCheck className="w-3 h-3" /> {badgeText}
              </span>
              <span className="hidden sm:inline text-gray-400">• {bestDeal.storeName}</span>
            </div>
@@ -56,7 +86,7 @@ export default function FloatingCTA({ bestDeal }: FloatingCTAProps) {
                {formatRupiah(bestDeal.price)}
              </span>
              <span className="text-[10px] text-gray-400 font-medium hidden sm:inline">
-               Pilihan Terbaik
+                 Awas Promo App Murah!
              </span>
            </div>
         </div>
@@ -67,7 +97,7 @@ export default function FloatingCTA({ bestDeal }: FloatingCTAProps) {
           target="_blank"
           className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white shadow-lg shadow-gray-200 transition-transform hover:-translate-y-1 ${getButtonColor(bestDeal.marketplace)}`}
         >
-          {bestDeal.marketplace === 'WHATSAPP_LOKAL' ? 'Chat Penjual' : 'Beli Sekarang'}
+          {bestDeal.marketplace === 'WHATSAPP_LOKAL' ? 'Chat Penjual' : ctaText}
           <ExternalLink className="w-4 h-4" />
         </Link>
 
