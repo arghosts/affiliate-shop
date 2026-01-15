@@ -7,20 +7,21 @@ export const imagekit = new ImageKit({
   urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT!,
 });
 
-// Helper function upload fleksibel
-export async function uploadImage(file: File | Blob, folder: string = "/jagopilih/general") {
+// ✅ PERBAIKAN: Folder default sekarang "/general", bukan "/jagopilih/general"
+export async function uploadImage(file: File | Blob, folder: string = "/general") {
   const buffer = Buffer.from(await file.arrayBuffer());
   
-  // Bikin nama file unik
+  // Bersihkan nama file dari spasi
   const cleanName = (file as File).name.replace(/\s/g, "-");
   const uniqueName = `img-${Date.now()}-${cleanName}`;
 
   const response = await imagekit.upload({
     file: buffer,
-    fileName: uniqueName, // Generate nama otomatis
-    folder: folder,       // Folder dinamis
+    fileName: uniqueName,
+    folder: folder,       // Akan masuk ke folder yang ditentukan tanpa double prefix
     useUniqueFileName: false, 
   });
   
+  // Ini akan mengembalikan URL bersih: https://ik.imagekit.io/ID/folder/nama-file.jpg
   return response.url;
 }
