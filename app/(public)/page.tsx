@@ -118,7 +118,7 @@ export default async function HomePage({
           <div className="w-full md:w-64 shrink-0 space-y-8">
             {/* Filter Categories */}
             <div>
-              <h3 className="font-black text-coffee uppercase tracking-widest text-xs mb-4">Kategori</h3>
+              <h1 className="font-black text-coffee uppercase tracking-widest text-xs mb-4">Kategori</h1>
               <ul className="space-y-2">
                 <li>
                   <Link href="/" className={`text-sm font-bold ${!catFilter ? "text-gold-accent" : "text-muted-brown hover:text-gold-accent"}`}>
@@ -141,7 +141,7 @@ export default async function HomePage({
 
             {/* Filter Tags */}
             <div>
-              <h3 className="font-black text-coffee uppercase tracking-widest text-xs mb-4">Trending Tags</h3>
+              <h1 className="font-black text-coffee uppercase tracking-widest text-xs mb-4">Trending Tags</h1>
               <div className="flex flex-wrap gap-2">
                 {tags.map(t => (
                   <Link 
@@ -165,13 +165,13 @@ export default async function HomePage({
             <div className="mb-6 flex items-center justify-between">
               <div>
                  {query ? (
-                    <h2 className="text-2xl font-black text-coffee">Hasil pencarian: "{query}"</h2>
+                    <h1 className="text-2xl font-black text-coffee">Hasil pencarian: "{query}"</h1>
                  ) : catFilter ? (
-                    <h2 className="text-2xl font-black text-coffee">Kategori: {categories.find(c => c.slug === catFilter)?.name}</h2>
+                    <h1 className="text-2xl font-black text-coffee">Kategori: {categories.find(c => c.slug === catFilter)?.name}</h1>
                  ) : tagFilter ? (
-                    <h2 className="text-2xl font-black text-coffee">Tag: #{tags.find(t => t.slug === tagFilter)?.name}</h2>
+                    <h1 className="text-2xl font-black text-coffee">Tag: #{tags.find(t => t.slug === tagFilter)?.name}</h1>
                  ) : (
-                    <h2 className="text-2xl font-black text-coffee tracking-tighter uppercase">Rekomendasi Terbaru</h2>
+                    <h1 className="text-2xl font-black text-coffee tracking-tighter uppercase">Rekomendasi Terbaru</h1>
                  )}
                  
                  {/* Tombol Clear Filter */}
