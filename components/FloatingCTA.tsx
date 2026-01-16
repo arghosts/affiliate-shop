@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingBag, ExternalLink, BadgeCheck, Store } from "lucide-react";
+import { ExternalLink, BadgeCheck } from "lucide-react";
 import { MarketplaceType } from "@prisma/client";
 import { useState, useEffect } from "react"; // 1. Tambah Import ini
 
