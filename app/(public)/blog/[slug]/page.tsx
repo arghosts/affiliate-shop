@@ -89,6 +89,50 @@ const renderBlock = (block: any) => {
           )}
         </figure>
       );
+      case "table":
+      const tableData = block.data;
+      const rows = tableData.content || [];
+      const withHeadings = tableData.withHeadings || false; // Cek apakah baris pertama adalah header
+
+      if (!rows.length) return null;
+
+      return (
+        <div key={block.id} className="my-8 w-full overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+          <table className="w-full text-left text-sm text-gray-700 border-collapse">
+            
+            {/* RENDER HEADER (Jika withHeadings: true) */}
+            {withHeadings && rows.length > 0 && (
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  {rows[0].map((cell: string, index: number) => (
+                    <th 
+                      key={index} 
+                      className="px-6 py-4 font-bold text-coffee uppercase tracking-wider text-xs"
+                      dangerouslySetInnerHTML={{ __html: cell }}
+                    />
+                  ))}
+                </tr>
+              </thead>
+            )}
+
+            {/* RENDER BODY */}
+            <tbody className="divide-y divide-gray-100 bg-white">
+              {/* Jika withHeadings true, kita skip baris pertama (slice 1). Jika false, render semua. */}
+              {(withHeadings ? rows.slice(1) : rows).map((row: string[], rowIndex: number) => (
+                <tr key={rowIndex} className="hover:bg-gray-50/50 transition-colors">
+                  {row.map((cell: string, cellIndex: number) => (
+                    <td 
+                      key={cellIndex} 
+                      className="px-6 py-4 whitespace-pre-wrap leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: cell }}
+                    />
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
       
     // 👇 DEBUGGER: Kalau ada block aneh, dia akan muncul sebagai kode merah
     default:
