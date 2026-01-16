@@ -1,101 +1,83 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import EditorJS from "@editorjs/editorjs";
-import Header from "@editorjs/header"; 
-import List from "@editorjs/list"; 
-import ImageTool from "@editorjs/image";
-import Embed from "@editorjs/embed";
-import Table from "@editorjs/table";
+import React, { useEffect, useRef, memo } from "react";
+import EditorJS, { OutputData } from "@editorjs/editorjs";
+import { EDITOR_TOOLS } from "@/config/editor-tools";
+import { cn } from "@/lib/utils"; // Asumsi utility class merge
 
 interface EditorProps {
-  data?: any;
-  onChange: (data: any) => void;
+  data?: OutputData; // Gunakan tipe bawaan EditorJS, bukan 'any'
+  onChange: (data: OutputData) => void;
   holder: string;
+  readOnly?: boolean;
 }
 
-export default function Editor({ data, onChange, holder }: EditorProps) {
-  const ref = useRef<EditorJS | null>(null);
+const Editor = ({ data, onChange, holder, readOnly = false }: EditorProps) => {
+  // Ref untuk menyimpan instance EditorJS
+  const editorRef = useRef<EditorJS | null>(null);
+  // Ref untuk memastikan inisialisasi hanya terjadi sekali (React 18 Strict Mode fix)
+  const isReady = useRef(false);
 
   useEffect(() => {
-    if (!ref.current) {
+    // Guard clause: Jika sudah ready, jangan init ulang
+    if (isReady.current) return;
+
+    const initEditor = async () => {
       const editor = new EditorJS({
         holder: holder,
-        tools: { 
-          header: {
-            // 👇 TAMBAHKAN 'as any' DISINI UNTUK FIX ERROR
-            class: Header as any, 
-            config: {
-              placeholder: 'Masukkan Judul...',
-              levels: [2, 3, 4],
-              defaultLevel: 2
-            }
-          }, 
-          list: {
-            // 👇 TAMBAHKAN 'as any' JUGA DISINI BIAR AMAN
-            class: List as any, 
-            inlineToolbar: true,
-            config: {
-              defaultStyle: 'unordered'
-            }
-          },
-          // 👇 Daftarkan Table Tool Disini
-          table: {
-            class: Table as any,
-            inlineToolbar: true,
-            config: {
-              rows: 2, // Baris default saat insert
-              cols: 3, // Kolom default saat insert
-            },
-          },
-          // Tool Embed (Youtube, Twitter, IG, dll)
-          embed: {
-            class: Embed,
-            inlineToolbar: true,
-            config: {
-              services: {
-                youtube: true,
-                coub: true,
-                twitter: true,
-                instagram: true, // Kadang perlu API Key meta facebook kalau IG
-              },
-            },
-          },
-
-          // Tool Image (Upload ke API kita tadi)
-          image: {
-            class: ImageTool,
-            config: {
-              endpoints: {
-                // Arahkan ke API Route yang baru kita buat di langkah no 2
-                byFile: '/api/editor/upload', 
-              },
-              field: 'image', // Nama field form data
-            },
-          },
+        tools: EDITOR_TOOLS,
+        data: data || undefined,
+        readOnly: readOnly,
+        placeholder: "Mulai tulis ceritamu disini...",
+        
+        // Performance: Gunakan onReady untuk memastikan core loaded
+        onReady: () => {
+          console.log("Editor.js is ready to work!");
+          isReady.current = true;
+          editorRef.current = editor;
         },
-        data: data,
-        placeholder: 'Mulai tulis ceritamu disini...',
-        async onChange(api, event) {
-          const content = await api.saver.save();
-          onChange(content);
+
+        async onChange(api, _event) {
+          try {
+            const savedData = await api.saver.save();
+            onChange(savedData);
+          } catch (error) {
+            console.error("Editor save failed:", error);
+          }
         },
       });
-      ref.current = editor;
-    }
+    };
 
+    initEditor();
+
+    // Cleanup function
     return () => {
-      if (ref.current && ref.current.destroy) {
-        ref.current.destroy();
-        ref.current = null;
+      if (editorRef.current && typeof editorRef.current.destroy === "function") {
+        // Hapus instance hanya saat komponen benar-benar unmount
+        // Note: Di React 18 dev mode, ini mungkin terpanggil cepat, 
+        // tapi isReady ref kita menahan re-init yang tidak perlu.
+        editorRef.current.destroy();
+        editorRef.current = null;
+        isReady.current = false;
       }
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
+  // Dependency array kosong: EditorJS tidak didesain untuk re-render reaktif 
+  // terhadap props 'data'. Update data eksternal harus via instance method render().
 
   return (
-    <div 
-      id={holder} 
-      className="prose max-w-none min-h-[300px] border border-gray-300 p-4 rounded-xl bg-white focus-within:ring-2 focus-within:ring-orange-500 focus-within:border-transparent transition-all" 
+    <div
+      id={holder}
+      className={cn(
+        "prose prose-slate max-w-none dark:prose-invert",
+        "min-h-[300px] rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all",
+        "focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20",
+        readOnly && "pointer-events-none opacity-75 bg-gray-50"
+      )}
     />
   );
-}
+};
+
+// Memoize untuk mencegah re-render yang tidak perlu dari parent
+export default memo(Editor);
