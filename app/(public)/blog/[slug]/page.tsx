@@ -4,7 +4,8 @@ import Link from "next/link";
 import { ChevronLeft, Calendar, User, ArrowRight, ShoppingBag } from "lucide-react"; 
 import { Metadata } from "next";
 import React from "react"; 
-import ShareWidget from "@/components/ShareWidget"; 
+import ShareWidget from "@/components/ShareWidget";
+import Image from "next/image";
 
 // --- HELPER: Render Block Editor.js (ROBUST VERSION) ---
 const renderBlock = (block: any) => {
@@ -64,13 +65,27 @@ const renderBlock = (block: any) => {
     case "image":
       const imageUrl = block.data.file?.url;
       if (!imageUrl) return null;
+      
       return (
         <figure key={block.id} className="my-10">
-          <div className="relative overflow-hidden rounded-2xl border border-gray-100 shadow-sm bg-gray-50">
-            <img src={imageUrl} alt={block.data.caption} className="w-full h-auto" />
+          {/* Wrapper dengan aspect-video (16:9) agar browser sudah 
+            menyiapkan ruang sebelum gambar muncul (Zero CLS) 
+          */}
+          <div className="relative aspect-video overflow-hidden rounded-2xl border border-gray-100 shadow-sm bg-gray-50">
+            <Image
+              src={imageUrl}
+              alt={block.data.caption || "Gambar konten Jagopilih"}
+              fill
+              className="object-cover"
+              // Jangan gunakan priority di sini kecuali ini gambar pertama di artikel
+              // Browser akan melakukan lazy load secara otomatis
+              sizes="(max-width: 768px) 100vw, 800px"
+            />
           </div>
           {block.data.caption && (
-            <figcaption className="text-center text-sm text-gray-500 mt-3 italic">{block.data.caption}</figcaption>
+            <figcaption className="text-center text-sm text-gray-500 mt-3 italic font-medium">
+              {block.data.caption}
+            </figcaption>
           )}
         </figure>
       );
@@ -186,7 +201,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
             {post.thumbnail && (
               <div className="relative aspect-video w-full overflow-hidden rounded-2xl mb-10 shadow-sm border border-gray-100">
-                <img src={post.thumbnail} alt={post.title} className="object-cover w-full h-full" />
+                <Image
+                  src={post.thumbnail}
+                  alt={post.title}
+                  fill
+                  className="object-cover"
+                  // ✅ KRUSIAL: Beritahu browser ini adalah LCP agar dimuat paling awal
+                  priority 
+                  // ✅ KRUSIAL: Mencegah browser download gambar ukuran raksasa di layar HP kecil
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 800px"
+                />
               </div>
             )}
 
