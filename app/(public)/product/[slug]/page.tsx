@@ -172,15 +172,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     price: bestDealLink.currentPrice
   } : null;
 
-  // URL LCP (Harus sama persis dengan yang ada di ImageCarousel)
-  const lcpUrl = `${product.images[0]}?tr=w-600,h-600,fo-auto`;
+  // // URL LCP (Harus sama persis dengan yang ada di ImageCarousel)
+  // const lcpUrl = `${product.images[0]}?tr=w-600,h-600,fo-auto`;
 
-  // PAKSA browser download gambar ini di detik ke-0 (Preload)
-  preload(lcpUrl, { 
-    as: "image", 
-    fetchPriority: "high",
-    imageSizes: "(max-width: 768px) 100vw, 600px" 
-  });
+  // // PAKSA browser download gambar ini di detik ke-0 (Preload)
+  // preload(lcpUrl, { 
+  //   as: "image", 
+  //   fetchPriority: "high",
+  //   imageSizes: "(max-width: 768px) 100vw, 600px" 
+  // });
 
   return (
     // ✅ UPDATE POINT 1 & 2: Tambah padding-top (pt-28) untuk navbar fix, 

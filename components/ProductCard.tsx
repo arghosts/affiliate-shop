@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Store, MapPin } from "lucide-react"; // Icon tambahan
+import { Store } from "lucide-react"; // Icon tambahan
 
 interface ProductProps {
   id: string;
