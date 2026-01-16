@@ -30,9 +30,9 @@ export default function ShareWidget({ title, slug }: ShareWidgetProps) {
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-      <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+      <h1 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
         <Share2 className="w-4 h-4 text-orange-500" /> Bagikan Artikel
-      </h4>
+      </h1>
       
       <div className="flex flex-col gap-3">
         {SOCIAL_PLATFORMS.map((platform) => {

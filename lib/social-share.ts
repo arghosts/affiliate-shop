@@ -12,7 +12,7 @@ export const SOCIAL_PLATFORMS: SocialPlatform[] = [
   {
     name: "WhatsApp",
     icon: MessageCircle,
-    color: "bg-green-500 hover:bg-green-600",
+    color: "bg-emerald-700 hover:bg-green-600",
     getShareUrl: (url, title) => `https://wa.me/?text=${encodeURIComponent(title + " " + url)}`,
   },
   {
