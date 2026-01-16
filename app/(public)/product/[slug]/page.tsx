@@ -8,6 +8,8 @@ import { Metadata } from "next";
 import { MarketplaceType } from "@prisma/client";
 import FloatingCTA from "@/components/FloatingCTA";
 import AffiliateButton from "@/components/AffiliateButton";
+import { preload } from 'react-dom'; // Pastikan import ini ada
+
 
 // --- Utility Functions ---
 const formatRupiah = (num: number | null) => {
@@ -134,21 +136,21 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   // --- Helper untuk Style Tombol Dinamis ---
   const getMarketplaceStyle = (marketplace: MarketplaceType, isReady: boolean) => {
-    if (!isReady) return 'bg-gray-100 text-gray-400 cursor-not-allowed';
+    if (!isReady) return 'bg-gray-100 text-zinc-600 cursor-not-allowed';
 
-    const baseStyle = "text-white hover:-translate-y-0.5 shadow-sm";
+    const baseStyle = "hover:-translate-y-0.5 shadow-sm";
 
     switch (marketplace) {
       case 'SHOPEE':
-        return `bg-[#EE4D2D] hover:bg-[#d73211] ${baseStyle}`; // Shopee Orange
+        return `bg-[#EE4D2D] hover:bg-[#d73211] text-slate-900 ${baseStyle}`; // Shopee Orange
       case 'TOKOPEDIA':
-        return `bg-[#03AC0E] hover:bg-[#028a0b] ${baseStyle}`; // Tokopedia Green (Pakai text putih agar kontras)
+        return `bg-[#03AC0E] hover:bg-[#028a0b] text-white ${baseStyle}`; // Tokopedia Green (Pakai text putih agar kontras)
       case 'TIKTOK':
-        return `bg-black hover:bg-gray-800 ${baseStyle}`; // TikTok Black
+        return `bg-black hover:bg-gray-800 text-white ${baseStyle}`; // TikTok Black
       case 'WHATSAPP_LOKAL':
-        return `bg-[#25D366] hover:bg-[#1da851] ${baseStyle}`; // WA Green
+        return `bg-[#25D366] hover:bg-[#1da851] text-white ${baseStyle}`; // WA Green
       default:
-        return `bg-coffee hover:bg-gold-accent ${baseStyle}`; // Default Theme
+        return `bg-coffee hover:bg-gold-accent text-white ${baseStyle}`; // Default Theme
     }
   };
 
@@ -169,6 +171,16 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     url: bestDealLink.affiliateUrl || bestDealLink.originalUrl,
     price: bestDealLink.currentPrice
   } : null;
+
+  // URL LCP (Harus sama persis dengan yang ada di ImageCarousel)
+  const lcpUrl = `${product.images[0]}?tr=w-600,h-600,fo-auto`;
+
+  // PAKSA browser download gambar ini di detik ke-0 (Preload)
+  preload(lcpUrl, { 
+    as: "image", 
+    fetchPriority: "high",
+    imageSizes: "(max-width: 768px) 100vw, 600px" 
+  });
 
   return (
     // ✅ UPDATE POINT 1 & 2: Tambah padding-top (pt-28) untuk navbar fix, 
@@ -205,7 +217,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
       {/* Breadcrumb / Back */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-coffee transition-colors bg-white/50 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+        <Link href="/" className="inline-flex items-center gap-2 text-sm font-bold text-zinc-600 hover:text-gold-accent transition-colors bg-white/50 backdrop-blur-sm px-3 py-1.5 rounded-lg">
           <ChevronLeft className="w-4 h-4" /> Kembali ke Katalog
         </Link>
       </div>
@@ -236,13 +248,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               
               {/* Harga Utama */}
               <div>
-                <p className="text-gray-500 text-sm font-medium mb-1">Harga Mulai Dari</p>
+                <p className="text-zinc-600 text-sm font-medium mb-1">Harga Mulai Dari</p>
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-black text-gold-accent">
                     {formatRupiah(product.minPrice)}
                   </span>
                   {product.maxPrice > product.minPrice && (
-                    <span className="text-lg text-gray-400 font-medium">
+                    <span className="text-lg text-zinc-600 font-medium">
                       - {formatRupiah(product.maxPrice)}
                     </span>
                   )}
@@ -253,16 +265,16 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             {/* DAFTAR PERBANDINGAN TOKO */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/50 shadow-sm overflow-hidden">
               <div className="p-4 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between">
-                <h3 className="font-bold text-coffee flex items-center gap-2">
+                <h1 className="font-bold text-coffee flex items-center gap-2">
                   <Store className="w-5 h-5 text-gold-accent" />
                   Pilihan Toko ({product.links.length})
-                </h3>
-                <span className="text-xs text-gray-500">Diurutkan dari termurah</span>
+                </h1>
+                <span className="text-xs text-zinc-600">Diurutkan dari termurah</span>
               </div>
 
               <div className="divide-y divide-gray-100">
                 {product.links.length === 0 ? (
-                  <div className="p-8 text-center text-gray-400 text-sm">
+                  <div className="p-8 text-center text-zinc-600 text-sm">
                     Belum ada data toko untuk produk ini.
                   </div>
                 ) : (
@@ -272,15 +284,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                       {/* Kiri: Info Toko */}
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-bold text-gray-800 text-lg">{link.storeName}</span>
+                          <span className="font-bold text-zinc-800 text-lg">{link.storeName}</span>
                           {link.isVerified && (
                              <BadgeCheck className="w-5 h-5 text-blue-500" fill="currentColor" color="white" />
                           )}
                         </div>
                         
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mt-2">
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-600 mt-2">
                            {/* Badge Marketplace */}
-                           <span className="px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-gray-100 text-gray-600 tracking-wider">
+                           <span className="px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-gray-100 text-zinc-600 tracking-wider">
                             {link.marketplace.replace("_", " ")}
                           </span>
                           {link.region && (
@@ -322,8 +334,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             {/* Deskripsi & Review */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
               <div className="space-y-4 bg-white/60 backdrop-blur-sm p-6 rounded-2xl border border-white/50 shadow-sm h-fit">
-                <h3 className="font-bold text-lg text-coffee border-b border-gray-100 pb-3">Deskripsi Produk</h3>
-                <div className="prose prose-sm prose-stone text-gray-600 leading-relaxed whitespace-pre-line">
+                <h1 className="font-bold text-lg text-coffee border-b border-gray-100 pb-3">Deskripsi Produk</h1>
+                <div className="prose prose-sm prose-stone text-coffee leading-relaxed whitespace-pre-line">
                   {product.description || "Belum ada deskripsi."}
                 </div>
               </div>
@@ -332,9 +344,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                  {/* Pros */}
                  {product.pros && (
                    <div className="bg-green-50/80 backdrop-blur-sm p-6 rounded-2xl border border-green-100/50 shadow-sm">
-                     <h4 className="font-bold text-green-800 flex items-center gap-2 mb-4">
+                     <h1 className="font-bold text-green-800 flex items-center gap-2 mb-4">
                        <CheckCircle2 className="w-5 h-5" /> Kelebihan
-                     </h4>
+                     </h1>
                      <ul className="space-y-3">
                        {getList(product.pros).map((item, i) => (
                          <li key={i} className="flex items-start gap-3 text-sm text-green-800/80 font-medium">
@@ -349,9 +361,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                  {/* Cons */}
                  {product.cons && (
                    <div className="bg-red-50/80 backdrop-blur-sm p-6 rounded-2xl border border-red-100/50 shadow-sm">
-                     <h4 className="font-bold text-red-800 flex items-center gap-2 mb-4">
+                     <h1 className="font-bold text-red-800 flex items-center gap-2 mb-4">
                        <AlertCircle className="w-5 h-5" /> Kekurangan
-                     </h4>
+                     </h1>
                      <ul className="space-y-3">
                        {getList(product.cons).map((item, i) => (
                          <li key={i} className="flex items-start gap-3 text-sm text-red-800/80 font-medium">
@@ -370,7 +382,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               <section className="pt-12 border-t border-gray-200/50 mt-12">
                 <div className="flex items-center gap-2 mb-8">
                   <Sparkles className="w-6 h-6 text-gold-accent" />
-                  <h3 className="font-black text-2xl text-coffee">Produk Serupa</h3>
+                  <h1 className="font-black text-2xl text-coffee">Produk Serupa</h1>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -389,10 +401,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                     />
                   ))}
                 </div>
-                {/* 4. BOTTOM FADE SEPARATOR (Gradasi Halus ke bawah) */}
-                {/* Ini yang membuat Hero menyatu lembut dengan list produk */}
-                <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-warm-bg to-transparent z-10 pointer-events-none" />
-
               </section>
             )}
 
@@ -400,6 +408,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         </div>
       </div>
       <FloatingCTA bestDeal={bestDealData} />
+      {/* 4. BOTTOM FADE SEPARATOR (Gradasi Halus ke bawah) */}
+      {/* Ini yang membuat Hero menyatu lembut dengan list produk */}
+      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-warm-bg to-transparent z-10 pointer-events-none" />
     </div>
     </>
   );

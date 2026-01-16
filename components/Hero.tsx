@@ -53,10 +53,7 @@ export default function Hero({
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           
           {/* Left Content (Text) */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+          <div 
             className="text-center lg:text-left"
           >
              {/* Promo Badge */}
@@ -90,20 +87,17 @@ export default function Hero({
                  {secondaryBtnText}
                </Link>
              </div>
-          </motion.div>
+          </div>
 
           {/* Right Content (Image & Floating Cards) */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+          <div 
             className="relative hidden lg:block"
           >
              {/* Glass Container Image */}
              <div className="relative z-20 bg-white/60 backdrop-blur-md p-4 rounded-[2.5rem] border border-white/80 shadow-2xl shadow-coffee/5">
                 {heroImage ? (
                    <div className="relative aspect-square rounded-[2rem] overflow-hidden bg-gray-100">
-                     <Image src={heroImage} alt={title} fill className="object-cover" sizes="(max-width: 1024px) 1px, 50vw" />
+                     <Image src={heroImage} alt={title} fill className="object-cover" sizes="(max-width: 1024px) 1px, 50vw" priority fetchPriority="high"/>
                    </div>
                 ) : (
                    // Placeholder Animation jika tidak ada gambar
@@ -156,7 +150,7 @@ export default function Hero({
                   </div>
               </motion.div>
 
-          </motion.div>
+          </div>
         </div>
       </div>
 

@@ -56,7 +56,7 @@ export default function FloatingCTA({ bestDeal }: FloatingCTAProps) {
   // Helper Warna Tombol
   const getButtonColor = (mp: MarketplaceType) => {
     switch (mp) {
-      case 'SHOPEE': return 'bg-[#EE4D2D] hover:bg-[#d03e1f]';
+      case 'SHOPEE': return 'bg-[#EE4D2D] hover:bg-[#d03e1f] text-coffee';
       case 'TOKOPEDIA': return 'bg-[#03AC0E] hover:bg-[#028a0b]';
       case 'TIKTOK': return 'bg-black hover:bg-gray-800';
       case 'WHATSAPP_LOKAL': return 'bg-[#25D366] hover:bg-[#1da851]';
@@ -74,18 +74,18 @@ export default function FloatingCTA({ bestDeal }: FloatingCTAProps) {
         
         {/* Info Harga & Toko */}
         <div className="flex flex-col">
-           <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500 mb-1">
+           <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-600 mb-1">
              <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider flex items-center gap-1">
                <BadgeCheck className="w-3 h-3" /> {badgeText}
              </span>
-             <span className="hidden sm:inline text-gray-400">• {bestDeal.storeName}</span>
+             <span className="hidden sm:inline text-zinc-600">• {bestDeal.storeName}</span>
            </div>
            
            <div className="flex items-baseline gap-2">
-             <span className="font-black text-xl text-gray-900 leading-none">
+             <span className="font-black text-xl text-zinc-900 leading-none">
                {formatRupiah(bestDeal.price)}
              </span>
-             <span className="text-[10px] text-gray-400 font-medium hidden sm:inline">
+             <span className="text-[10px] text-zinc-600 font-medium hidden sm:inline">
                  Awas Promo App Murah!
              </span>
            </div>
@@ -95,7 +95,7 @@ export default function FloatingCTA({ bestDeal }: FloatingCTAProps) {
         <Link
           href={bestDeal.url}
           target="_blank"
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white shadow-lg shadow-gray-200 transition-transform hover:-translate-y-1 ${getButtonColor(bestDeal.marketplace)}`}
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-slate-900 shadow-lg shadow-gray-200 transition-transform hover:-translate-y-1 ${getButtonColor(bestDeal.marketplace)}`}
         >
           {bestDeal.marketplace === 'WHATSAPP_LOKAL' ? 'Chat Penjual' : ctaText}
           <ExternalLink className="w-4 h-4" />

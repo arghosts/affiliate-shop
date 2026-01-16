@@ -43,6 +43,7 @@ export default async function Navbar() {
           <Link 
             href="/#products"
             className="flex items-center gap-2 bg-coffee text-white px-5 py-2.5 rounded-full text-xs font-bold hover:bg-gold-accent transition-colors shadow-lg shadow-coffee/20"
+            aria-label="Jelajahi"
           >
             <ShoppingBag className="w-4 h-4" /> 
             <span className="hidden sm:inline">Jelajahi</span>

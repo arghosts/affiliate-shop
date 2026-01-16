@@ -29,7 +29,7 @@ function SearchBarContent() {
       */}
       <button 
         type="submit"
-        className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-gray-400 hover:text-coffee hover:bg-gray-200/50 transition-all z-10"
+        className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-slate-600 hover:text-coffee hover:bg-gray-200/50 transition-all z-10"
         aria-label="Cari Produk"
       >
         <Search className="w-4 h-4" />
@@ -42,7 +42,7 @@ function SearchBarContent() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Beli apa hari ini..." 
-        className="w-full pl-10 pr-4 py-2 bg-gray-100 border-none rounded-full text-sm font-bold text-coffee focus:ring-2 focus:ring-gold-accent/20 outline-none transition-all placeholder:text-gray-400/80"
+        className="w-full pl-10 pr-4 py-2 bg-gray-100 border-none rounded-full text-sm font-bold text-coffee focus:ring-2 focus:ring-gold-accent/20 outline-none transition-all placeholder:text-zinc-600"
       />
     </form>
   );
