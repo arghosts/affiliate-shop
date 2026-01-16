@@ -6,23 +6,21 @@ import { Metadata } from "next";
 import React from "react"; 
 import ShareWidget from "@/components/ShareWidget"; 
 
-// --- 1. FIXED RENDER BLOCK (Strict & Clean) ---
+// --- HELPER: Render Block Editor.js (ROBUST VERSION) ---
 const renderBlock = (block: any) => {
-  // Guard clause: jika data tidak valid, skip render
+  // 1. Safety Guard
   if (!block || !block.data) return null;
 
   switch (block.type) {
     case "header":
       const level = block.data.level || 2;
       const HeadingTag = `h${level}` as React.ElementType;
-      // Style dinamis berdasarkan level header
       const headingClass = level === 2 
         ? "text-3xl font-bold mt-10 mb-6 text-coffee leading-tight" 
         : "text-2xl font-semibold mt-8 mb-4 text-gray-800 leading-snug";
       
       return (
         <HeadingTag key={block.id} className={headingClass}>
-          {/* Gunakan dangerouslySetInnerHTML jika header mengandung mark/bold */}
           <span dangerouslySetInnerHTML={{ __html: block.data.text }} />
         </HeadingTag>
       );
@@ -32,7 +30,6 @@ const renderBlock = (block: any) => {
         <p 
           key={block.id} 
           className="mb-6 text-gray-700 leading-loose text-lg"
-          // Render HTML langsung di P, jangan bungkus span lagi (cleaner DOM)
           dangerouslySetInnerHTML={{ __html: block.data.text }} 
         />
       );
@@ -40,43 +37,54 @@ const renderBlock = (block: any) => {
     case "list":
       const ListTag = block.data.style === "ordered" ? "ol" : "ul";
       const listClass = block.data.style === "ordered" ? "list-decimal" : "list-disc";
-      
-      // Safety check untuk items
-      if (!Array.isArray(block.data.items)) return null;
+      const items = block.data.items || [];
 
       return (
-        <ListTag key={block.id} className={`${listClass} mb-6 ml-6 space-y-2 text-gray-700 text-lg leading-relaxed`}>
-          {block.data.items.map((item: string, i: number) => (
-             <li key={i} dangerouslySetInnerHTML={{ __html: item }} />
-          ))}
+        <ListTag key={block.id} className={`${listClass} mb-6 ml-8 space-y-2 text-gray-700 text-lg leading-relaxed`}>
+          {items.map((item: any, i: number) => {
+            // 👇 LOGIKA PERBAIKAN [object Object] 👇
+            let content = "";
+            
+            if (typeof item === "string") {
+              // Jika data bersih (Array of strings)
+              content = item;
+            } else if (typeof item === "object" && item !== null) {
+              // Jika data kotor (Array of objects), ambil properti 'content' atau 'text'
+              // Ini sering terjadi kalau pakai Nested List atau bug parsing
+              content = item.content || item.text || item.value || JSON.stringify(item); 
+            }
+
+            return (
+              <li key={i} dangerouslySetInnerHTML={{ __html: content }} />
+            );
+          })}
         </ListTag>
       );
       
     case "image":
       const imageUrl = block.data.file?.url;
       if (!imageUrl) return null;
-
       return (
         <figure key={block.id} className="my-10">
           <div className="relative overflow-hidden rounded-2xl border border-gray-100 shadow-sm bg-gray-50">
-            <img 
-              src={imageUrl} 
-              alt={block.data.caption || "Blog Image"} 
-              className="w-full h-auto object-cover"
-              loading="lazy"
-            />
+            <img src={imageUrl} alt={block.data.caption} className="w-full h-auto" />
           </div>
           {block.data.caption && (
-            <figcaption className="text-center text-sm text-gray-500 mt-3 italic">
-              {block.data.caption}
-            </figcaption>
+            <figcaption className="text-center text-sm text-gray-500 mt-3 italic">{block.data.caption}</figcaption>
           )}
         </figure>
       );
-
-    // Tambahkan case lain jika perlu (quote, table, dll)
-    
+      
+    // 👇 DEBUGGER: Kalau ada block aneh, dia akan muncul sebagai kode merah
     default:
+      if (process.env.NODE_ENV === 'development') {
+         return (
+           <div key={block.id} className="p-4 bg-red-50 border border-red-200 text-red-600 text-xs font-mono my-4">
+             <strong>Unknown Block: {block.type}</strong>
+             <pre>{JSON.stringify(block.data, null, 2)}</pre>
+           </div>
+         );
+      }
       return null;
   }
 };
