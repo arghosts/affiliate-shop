@@ -75,22 +75,22 @@ export default async function HomePage({
   // 4. LOGIC PRELOAD CERDAS (OPTIMASI LCP BARU)
   // Browser hanya bisa prioritas tinggi ke SATU gambar. Pilih yang benar.
   
-  if (!isFiltering && heroData.heroImage) {
-    // KASUS A: User buka Home -> Preload Hero Image dari DB
-    preload(heroData.heroImage, {
-      as: 'image',
-      fetchPriority: 'high',
-      imageSizes: "(max-width: 768px) 100vw, 500px" // Sesuaikan estimasi ukuran Hero di Mobile
-    });
-  } else if (products.length > 0 && products[0].images[0]) {
-    // KASUS B: User sedang Search/Filter -> Preload Produk Pertama
-    const lcpUrl = `${products[0].images[0]}?tr=w-400,q-70,fo-auto`;
-    preload(lcpUrl, {
-      as: 'image',
-      fetchPriority: 'high',
-      imageSizes: '(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw',
-    });
-  }
+  // if (!isFiltering && heroData.heroImage) {
+  //   // KASUS A: User buka Home -> Preload Hero Image dari DB
+  //   preload(heroData.heroImage, {
+  //     as: 'image',
+  //     fetchPriority: 'high',
+  //     imageSizes: "(max-width: 768px) 100vw, 500px" // Sesuaikan estimasi ukuran Hero di Mobile
+  //   });
+  // } else if (products.length > 0 && products[0].images[0]) {
+  //   // KASUS B: User sedang Search/Filter -> Preload Produk Pertama
+  //   const lcpUrl = `${products[0].images[0]}?tr=w-400,q-70,fo-auto`;
+  //   preload(lcpUrl, {
+  //     as: 'image',
+  //     fetchPriority: 'high',
+  //     imageSizes: '(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw',
+  //   });
+  // }
 
   return (
     <div className="bg-warm-bg min-h-screen pb-20">
