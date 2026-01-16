@@ -69,7 +69,7 @@ export default function TermsPage() {
                 <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
                   <Info className="w-5 h-5" />
                 </div>
-                <h2 className="text-xl font-bold text-coffee m-0">1. Sifat Layanan & Penafian Umum</h2>
+                <h1 className="text-xl font-bold text-coffee m-0">1. Sifat Layanan & Penafian Umum</h1>
               </div>
               <p>
                 JagoPilih adalah blog pribadi yang menyajikan artikel ulasan (review), rekomendasi produk, dan informasi umum.
@@ -86,7 +86,7 @@ export default function TermsPage() {
 
             {/* SECTION 2 */}
             <section className="mb-10">
-              <h2 className="text-xl font-bold text-coffee mb-4">2. Batasan Tanggung Jawab</h2>
+              <h1 className="text-xl font-bold text-coffee mb-4">2. Batasan Tanggung Jawab</h1>
               <p className="mb-4">
                 Kami melindungi integritas konten kami, namun kami harus membatasi risiko hukum:
               </p>
@@ -102,7 +102,7 @@ export default function TermsPage() {
 
             {/* SECTION 3 - HIGHLIGHTED */}
             <section className="mb-10 bg-orange-50/50 p-6 rounded-2xl border border-orange-100">
-              <h2 className="text-xl font-bold text-orange-800 mb-4 mt-0">3. Sanggahan Affiliate (Disclosure)</h2>
+              <h1 className="text-xl font-bold text-orange-800 mb-4 mt-0">3. Sanggahan Affiliate (Disclosure)</h1>
               <p className="text-sm">
                 Transparansi adalah prioritas kami. Harap perhatikan bahwa:
               </p>
@@ -121,7 +121,7 @@ export default function TermsPage() {
 
             {/* SECTION 4 */}
             <section className="mb-10">
-              <h2 className="text-xl font-bold text-coffee mb-4">4. Tautan Pihak Ketiga</h2>
+              <h1 className="text-xl font-bold text-coffee mb-4">4. Tautan Pihak Ketiga</h1>
               <p>
                 Situs kami berisi tautan ke situs web pihak ketiga yang tidak dioperasikan oleh kami. Kami tidak memiliki kendali atas konten, kebijakan privasi, atau praktik situs web pihak ketiga tersebut. Risiko yang timbul dari akses ke tautan luar sepenuhnya menjadi tanggung jawab pengguna.
               </p>
@@ -133,7 +133,7 @@ export default function TermsPage() {
                 <div className="p-2 bg-red-50 text-red-600 rounded-lg">
                   <ShieldAlert className="w-5 h-5" />
                 </div>
-                <h2 className="text-xl font-bold text-coffee m-0">5. Hak Kekayaan Intelektual (HAKI)</h2>
+                <h1 className="text-xl font-bold text-coffee m-0">5. Hak Kekayaan Intelektual (HAKI)</h1>
               </div>
               <p>
                 Seluruh konten teks, logo, dan penataan di JagoPilih adalah hak milik pengelola situs, kecuali materi gambar produk yang merupakan hak cipta masing-masing merek/brand terkait yang digunakan di bawah prinsip <em>Fair Use</em> (Penggunaan Wajar) untuk tujuan ulasan.
@@ -141,13 +141,13 @@ export default function TermsPage() {
               
               <div className="grid md:grid-cols-2 gap-6 mt-6 not-prose">
                 <div className="bg-red-50 p-5 rounded-xl border border-red-100">
-                  <h4 className="font-bold text-red-700 mb-2 uppercase text-xs tracking-wider">Dilarang Keras</h4>
+                  <h1 className="font-bold text-red-700 mb-2 uppercase text-xs tracking-wider">Dilarang Keras</h1>
                   <p className="text-sm text-red-900/80 leading-relaxed">
                     Menyalin, mempublikasikan ulang (<em>reupload</em>), atau mendistribusikan konten kami untuk tujuan komersial tanpa izin tertulis.
                   </p>
                 </div>
                 <div className="bg-green-50 p-5 rounded-xl border border-green-100">
-                  <h4 className="font-bold text-green-700 mb-2 uppercase text-xs tracking-wider">Diperbolehkan (Kutipan)</h4>
+                  <h1 className="font-bold text-green-700 mb-2 uppercase text-xs tracking-wider">Diperbolehkan (Kutipan)</h1>
                   <p className="text-sm text-green-900/80 leading-relaxed">
                     Anda diperbolehkan mengutip sebagian kecil konten kami dengan syarat wajib mencantumkan <strong>sumber tautan aktif (backlink)</strong> yang jelas ke artikel asli di JagoPilih.
                   </p>
@@ -161,7 +161,7 @@ export default function TermsPage() {
                 <div className="p-2 bg-gray-100 text-gray-600 rounded-lg">
                   <Scale className="w-5 h-5" />
                 </div>
-                <h2 className="text-xl font-bold text-coffee m-0">6. Kepatuhan Hukum</h2>
+                <h1 className="text-xl font-bold text-coffee m-0">6. Kepatuhan Hukum</h1>
               </div>
               <p>
                 Syarat dan ketentuan ini diatur berdasarkan hukum Republik Indonesia. Setiap perselisihan yang timbul akan diselesaikan terlebih dahulu melalui musyawarah mufakat.

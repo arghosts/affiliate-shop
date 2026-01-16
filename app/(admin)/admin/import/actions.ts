@@ -117,8 +117,6 @@ export async function importProducts(rawRows: any[]) {
             minPrice,
             maxPrice,
             links: {
-              // Kita buat link baru. (Hati-hati: ini akan terus menambah link)
-              // Jika ingin bersih, bisa pakai deleteMany dulu di sini.
               create: productData.links
             }
           },

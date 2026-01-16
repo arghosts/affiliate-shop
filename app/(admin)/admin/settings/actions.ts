@@ -4,9 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-// Helper: Handle string kosong jadi null/undefined buat URL optional
-const emptyStringToUndefined = z.literal("").transform(() => undefined);
-
 const settingsSchema = z.object({
   id: z.coerce.number(), // Pastikan ID jadi number
   

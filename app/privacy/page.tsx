@@ -80,7 +80,7 @@ export default function PrivacyPage() {
                 <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
                   <Shield className="w-5 h-5" />
                 </div>
-                <h2 className="text-xl font-bold text-coffee m-0">1. Informasi yang Kami Kumpulkan (Log Files)</h2>
+                <h1 className="text-xl font-bold text-coffee m-0">1. Informasi yang Kami Kumpulkan (Log Files)</h1>
               </div>
               <p>
                 JagoPilih mengikuti prosedur standar menggunakan file log. File-file ini mencatat pengunjung ketika mereka mengunjungi situs web. Informasi yang dikumpulkan meliputi:
@@ -102,7 +102,7 @@ export default function PrivacyPage() {
                 <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
                   <Cookie className="w-5 h-5" />
                 </div>
-                <h2 className="text-xl font-bold text-coffee m-0">2. Cookies dan Web Beacons</h2>
+                <h1 className="text-xl font-bold text-coffee m-0">2. Cookies dan Web Beacons</h1>
               </div>
               <p>
                 Seperti situs web lainnya, JagoPilih menggunakan 'cookies'. Cookies ini digunakan untuk menyimpan informasi termasuk preferensi pengunjung, dan halaman di situs web yang diakses atau dikunjungi pengunjung. Informasi tersebut digunakan untuk mengoptimalkan pengalaman pengguna dengan menyesuaikan konten halaman web kami.
@@ -115,7 +115,7 @@ export default function PrivacyPage() {
                 <div className="p-2 bg-yellow-50 text-yellow-600 rounded-lg">
                   <Coins className="w-5 h-5" />
                 </div>
-                <h2 className="text-xl font-bold text-coffee m-0">3. Pengungkapan Afiliasi (Affiliate Disclosure)</h2>
+                <h1 className="text-xl font-bold text-coffee m-0">3. Pengungkapan Afiliasi (Affiliate Disclosure)</h1>
               </div>
               <p>
                 JagoPilih adalah peserta dalam berbagai program afiliasi marketing. Ini berarti:
@@ -133,7 +133,7 @@ export default function PrivacyPage() {
                 <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
                   <Lock className="w-5 h-5" />
                 </div>
-                <h2 className="text-xl font-bold text-coffee m-0">4. Kebijakan Privasi Pihak Ketiga</h2>
+                <h1 className="text-xl font-bold text-coffee m-0">4. Kebijakan Privasi Pihak Ketiga</h1>
               </div>
               <p>
                 Server iklan pihak ketiga atau jaringan iklan mungkin menggunakan teknologi seperti cookies, JavaScript, atau Web Beacons dalam iklan mereka yang muncul di JagoPilih.
@@ -149,7 +149,7 @@ export default function PrivacyPage() {
                 <div className="p-2 bg-pink-50 text-pink-600 rounded-lg">
                   <Users className="w-5 h-5" />
                 </div>
-                <h2 className="text-xl font-bold text-coffee m-0">5. Informasi Anak</h2>
+                <h1 className="text-xl font-bold text-coffee m-0">5. Informasi Anak</h1>
               </div>
               <p>
                 Kami mendorong orang tua untuk memantau aktivitas online anak-anak mereka. JagoPilih <strong>tidak secara sadar</strong> mengumpulkan Informasi Identifikasi Pribadi apa pun dari anak-anak di bawah usia 13 tahun.
@@ -162,7 +162,7 @@ export default function PrivacyPage() {
                 <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
                   <CheckCircle className="w-5 h-5" />
                 </div>
-                <h2 className="text-xl font-bold text-coffee m-0">6. Persetujuan (Consent)</h2>
+                <h1 className="text-xl font-bold text-coffee m-0">6. Persetujuan (Consent)</h1>
               </div>
               <p>
                 Dengan menggunakan situs web kami, Anda dengan ini menyetujui Kebijakan Privasi kami dan menyetujui Syarat dan Ketentuannya.
@@ -174,7 +174,7 @@ export default function PrivacyPage() {
                <div className="inline-flex p-3 bg-white rounded-full shadow-sm mb-4 text-coffee">
                   <Mail className="w-6 h-6" />
                </div>
-               <h2 className="text-xl font-bold text-coffee mb-2 mt-0">Ada Pertanyaan?</h2>
+               <h1 className="text-xl font-bold text-coffee mb-2 mt-0">Ada Pertanyaan?</h1>
                <p className="text-gray-600 mb-4 text-sm">
                  Jika Anda memiliki pertanyaan mengenai kebijakan ini, hubungi kami melalui:
                </p>

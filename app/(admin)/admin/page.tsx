@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { Package, MousePointerClick, Activity } from "lucide-react";
 
 // Helper Component untuk Card Statistik
-// @ts-ignore - Mengabaikan strict type check untuk props sementara
 function StatCard({ title, value, icon: Icon, colorClass }: any) {
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
@@ -22,9 +21,6 @@ export default async function AdminDashboard() {
   const productCount = await prisma.product.count();
   
   // ✅ PERBAIKAN SCHEMA BARU:
-  // Alih-alih mengecek kolom shopeeLink/tokpedLink yang sudah hilang,
-  // kita menghitung total entri di tabel ProductLink.
-  // Ini merepresentasikan total "Opsi Belanja" yang tersedia di seluruh sistem.
   const activeLinks = await prisma.productLink.count({
     where: {
       isStockReady: true // Opsional: Hanya hitung yang stoknya ready
