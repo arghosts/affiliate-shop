@@ -109,13 +109,20 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   if (!post) notFound();
 
-  // Parsing JSON Content
+  // Parsing JSON Content (Safe Mode)
   let contentBlocks = [];
   try {
-    const parsed = typeof post.content === 'string' ? JSON.parse(post.content) : post.content;
-    contentBlocks = parsed?.blocks || [];
+    const rawContent = post.content;
+    // Cek apakah content string atau object sebelum parse
+    const parsed = typeof rawContent === 'string' ? JSON.parse(rawContent) : rawContent;
+    
+    // Pastikan blocks ada dan berbentuk array
+    contentBlocks = Array.isArray(parsed?.blocks) ? parsed.blocks : [];
+    
   } catch (e) {
     console.error("Error parsing content:", e);
+    // Fallback content biar page tidak error total
+    contentBlocks = []; 
   }
 
   const date = new Date(post.createdAt).toLocaleDateString("id-ID", {
@@ -123,24 +130,20 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   });
 
   return (
-    
-    <div className="min-h-screen bg-[#FDFCF8] font-sans pb-24 pt-28">
+    <div className="min-h-screen bg-[#FDFCF8] font-sans pb-24 pt-28 relative">
 
-      {/* 2. TEXTURE NOISE (Efek Kertas Premium) */}
+      {/* TEXTURE NOISE */}
       <div 
         className="absolute inset-0 opacity-[0.03] z-0 pointer-events-none mix-blend-multiply"
         style={{ 
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")` 
         }}
       />
-      {/* 3. BACKGROUND DECOR (Blobs & Grid) */}
+      
+      {/* BACKGROUND DECOR */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full z-0 pointer-events-none overflow-hidden">
-        {/* Blob Gold - Opacity dikurangi biar lebih soft */}
         <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-gold-accent/5 rounded-full blur-3xl opacity-60 mix-blend-multiply animate-blob" />
-        {/* Blob Coffee - Opacity dikurangi biar lebih soft */}
         <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] bg-coffee/5 rounded-full blur-3xl opacity-50 mix-blend-multiply animate-blob animation-delay-2000" />
-        
-        {/* Grid Pattern Halus */}
         <svg className="absolute inset-0 w-full h-full opacity-[0.03]" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="hero-grid" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -151,7 +154,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </svg>
       </div>
       
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Breadcrumb */}
         <Link href="/blog" className="inline-flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-coffee transition-colors mb-8">
@@ -182,11 +185,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               </div>
             )}
 
+            {/* RENDERER DI SINI */}
             <div className="prose prose-lg prose-stone max-w-none">
-              {contentBlocks.map((block: any) => renderBlock(block))}
+              {contentBlocks.length > 0 ? (
+                contentBlocks.map((block: any) => renderBlock(block))
+              ) : (
+                <p className="text-gray-400 italic">Konten sedang dimuat atau kosong...</p>
+              )}
             </div>
             
-            {/* CTA Mobile (Tetap ada di bawah artikel) */}
+            {/* CTA Mobile */}
             {post.referenceLink && (
                <div className="mt-12 p-6 bg-gradient-to-r from-coffee to-gray-800 rounded-2xl text-white shadow-xl lg:hidden">
                   <h3 className="font-bold text-xl mb-2 flex items-center gap-2">
@@ -207,9 +215,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
           {/* KOLOM KANAN: SIDEBAR */}
           <aside className="lg:col-span-4">
-            
-            {/* ✅ WRAPPER STICKY: Membungkus Rekomendasi & Share */}
-            {/* 'lg:sticky' agar hanya lengket di desktop, 'top-28' untuk jarak dari atas */}
             <div className="space-y-8 lg:sticky lg:top-28">
               
               {/* CTA Desktop */}
@@ -234,7 +239,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 </div>
               )}
 
-              {/* Share Widget (Ikut sticky karena di dalam wrapper ini) */}
               <ShareWidget title={post.title} slug={post.slug} />
 
             </div>
