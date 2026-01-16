@@ -221,9 +221,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             {/* CTA Mobile (Tetap ada di bawah artikel) */}
             {post.referenceLink && (
                <div className="mt-12 p-6 bg-gradient-to-r from-coffee to-gray-800 rounded-2xl text-white shadow-xl lg:hidden">
-                  <h3 className="font-bold text-xl mb-2 flex items-center gap-2">
+                  <h1 className="font-bold text-xl mb-2 flex items-center gap-2">
                     <ShoppingBag className="w-5 h-5 text-gold-accent" /> Tertarik Produk Ini?
-                  </h3>
+                  </h1>
                   <p className="text-white/80 mb-6 text-sm">
                     Cek spesifikasi lengkap, perbandingan harga termurah, dan toko terpercaya.
                   </p>
@@ -252,7 +252,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                         Rekomendasi
                       </span>
                    </div>
-                   <h3 className="font-bold text-coffee text-xl mb-2">Produk Terkait</h3>
+                   <h1 className="font-bold text-coffee text-xl mb-2">Produk Terkait</h1>
                    <p className="text-sm text-gray-500 mb-6">
                      Artikel ini membahas produk yang tersedia di katalog kami. Cek harga terbaik sekarang.
                    </p>

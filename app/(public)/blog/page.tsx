@@ -100,9 +100,9 @@ export default async function BlogIndexPage() {
 
                 {/* 2. JUDUL (Link Sendiri) */}
                 <Link href={`/blog/${post.slug}`}>
-                  <h2 className="text-2xl font-bold text-coffee mb-4 leading-tight group-hover:text-gold-accent transition-colors line-clamp-2">
+                  <h1 className="text-2xl font-bold text-coffee mb-4 leading-tight group-hover:text-gold-accent transition-colors line-clamp-2">
                     {post.title}
-                  </h2>
+                  </h1>
                 </Link>
 
                 {/* 3. DESKRIPSI (Plain Text - Aman dari Error HTML) */}
