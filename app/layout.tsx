@@ -5,7 +5,10 @@ import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 
-const inter = Inter({ subsets: ["latin"] }); // Sesuaikan dengan font Anda
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap', // <--- WAJIB ADA. Teks langsung muncul (fallback) baru ganti font.
+})
 
 // 👇 INI YANG BENAR (Hanya boleh ada satu export const metadata)
 export const metadata: Metadata = {

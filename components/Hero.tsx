@@ -118,7 +118,7 @@ export default function Hero({
              {/* Decor Elements (Floating Cards) - Tetap dipertahankan */}
              <motion.div 
                 animate={{ y: [0, 15, 0], x: [0, -5, 0] }} 
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }} 
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 2.5 }} 
                 className="absolute top-[20%] right-[-5%] bg-white p-4 rounded-2xl shadow-xl shadow-gold-accent/10 border border-gold-accent/20 z-30"
              >
                   <div className="flex items-center gap-2">
@@ -134,7 +134,7 @@ export default function Hero({
               
               <motion.div 
                 animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }} 
-                transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} 
+                transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2.5 }} 
                 className="absolute bottom-[10%] left-[-5%] bg-coffee p-4 rounded-2xl shadow-xl shadow-coffee/20 z-30"
               >
                   <div className="flex items-center gap-3">

@@ -16,6 +16,10 @@
   /* Surface: Krem lembut untuk membedakan area kartu */
   --color-surface: #F2EADA;      
 }
+.animate-blob {
+  will-change: transform, opacity; /* Memberitahu browser untuk siapkan GPU */
+  animation: blob 7s infinite;
+}
 
 @layer base {
   body {
