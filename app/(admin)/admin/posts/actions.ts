@@ -39,7 +39,7 @@ async function handleThumbnailUpload(formData: FormData) {
     }
     // Upload ke ImageKit (Folder blog)
     // Pastikan lib/imagekit.ts sudah diupdate menerima folder
-    return await uploadImage(file, "/jagopilih/blog");
+    return await uploadImage(file, "/blog-content");
   }
 
   // 2. Jika tidak ada file baru, kembalikan URL lama

@@ -17,7 +17,7 @@ async function handleMultipleImageUpload(formData: FormData) {
     files.map(async (file) => {
       if (file instanceof File && file.size > 0 && file.type.startsWith("image/")) {
         try {
-          const url = await uploadImage(file);
+          const url = await uploadImage(file, "/products");
           if (url) newUrls.push(url);
         } catch (err) {
           console.error("Gagal upload gambar:", file.name, err);
