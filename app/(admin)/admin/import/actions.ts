@@ -117,6 +117,9 @@ export async function importProducts(rawRows: any[]) {
             minPrice,
             maxPrice,
             links: {
+              // 1. HAPUS SEMUA link lama milik produk ini
+              deleteMany: {}, 
+              // 2. MASUKKAN link baru dari Excel
               create: productData.links
             }
           },
