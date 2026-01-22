@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { Package, MousePointerClick, Activity } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 // Helper Component untuk Card Statistik
 function StatCard({ title, value, icon: Icon, colorClass }: any) {
   return (
