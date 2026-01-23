@@ -8,7 +8,6 @@ import { Metadata } from "next";
 import { MarketplaceType } from "@prisma/client";
 import FloatingCTA from "@/components/FloatingCTA";
 import AffiliateButton from "@/components/AffiliateButton";
-import { preload } from 'react-dom'; // Pastikan import ini ada
 
 
 // --- Utility Functions ---
@@ -382,7 +381,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               <section className="pt-12 border-t border-gray-200/50 mt-12">
                 <div className="flex items-center gap-2 mb-8">
                   <Sparkles className="w-6 h-6 text-gold-accent" />
-                  <h1 className="font-black text-2xl text-coffee">Produk Serupa</h1>
+                  <h1 className="font-black text-2xl text-coffee">Produk Terkait</h1>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
