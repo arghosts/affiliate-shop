@@ -109,7 +109,7 @@ export default async function Footer() {
                {siteName.charAt(0)}
             </div>
             <p className="text-[10px] font-bold text-coffee uppercase tracking-wider">
-              © {currentYear} {siteName}. All Rights Reserved.
+              © {currentYear} {siteName}.COM All Rights Reserved.
             </p>
           </div>
 
