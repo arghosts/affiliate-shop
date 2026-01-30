@@ -29,7 +29,7 @@ export default async function Footer() {
           {/* KOLOM 1: BRAND IDENTITY (Lebar 4/12) */}
           <div className="lg:col-span-4 pr-8">
             <h1 className="text-2xl font-black text-coffee tracking-tighter mb-6 uppercase">
-              {siteName}<span className="text-gold-accent">.</span>
+              {siteName}<span className="text-gold-accent">.COM</span>
             </h1>
             <p className="text-coffee font-medium leading-relaxed text-sm max-w-sm">
               {footerText}
